@@ -1,0 +1,109 @@
+# Configuration for Graph Flow Matching ARM Training
+# Point Cloud + Graph Neural Network + Flow Matching approach
+
+experiment:
+  name: "graph_flow"
+  version: "v1_full_graph"
+  seed: 42
+  save_dir: "outputs"
+
+model:
+  name: "FlowGraphARM"
+  input_dim: 768              # DINOv2 ViT-L/14 embedding dimension
+  output_dim: 15724           # Full voxel count (visual cortex)
+  hidden_dim: 256             # Graph hidden features (base channel)
+  time_dim: 256               # Time embedding dimension
+  num_heads: 8                # Attention heads for GAT/GCN
+  gnn_type: "gcn"             # Graph network type: "gat" or "gcn"
+  dropout: 0.1                # Dropout rate for graph layers
+
+  flow:
+    sigma: 0.0                # Flow noise (0.0 = deterministic OT)
+    sample_steps: 20          # Integration steps for sampling (10-20 typical)
+    cfg_dropout: 0.1          # Classifier-free guidance dropout during training
+    cfg_scale: 1.0            # CFG scale for inference (1.0 = no guidance)
+
+  loss:
+    type: "FlowMatchingLoss"
+    alpha: 3.0                # Peak amplification factor
+    tau: 0.5                  # Peak threshold (deviation from mean)
+    pearson_weight: 0.5       # Pearson correlation loss weight
+
+data:
+  # Data paths - UPDATE THESE TO YOUR PATHS
+  datalist_path: "dataset/nsd/metadata/datalist_mindeye2_sub01.json"
+  fmri_path: "dataset/nsd/subj01/betas_all_subj01_fp32_renorm.hdf5"
+  train_embeddings_path: "dataset/nsd/embeddings_mindeye2/dinov2_train_sub01.npy"
+  test_embeddings_path: "dataset/nsd/embeddings_mindeye2/dinov2_test_sub01.npy"
+  point_cloud_path: "data/fmri_point_cloud_graph_subj01.npz"
+
+  # Optional parcellation (set to null to disable)
+  parcel_labels_path: null
+
+  subjects: [1]               # List of subject IDs
+  batch_size: 4               # Batch size (start small for full graph)
+  num_workers: 4              # DataLoader workers
+
+  # Trial averaging
+  average_trials_train: false # Average 3 trials per image (training)
+  average_trials_val: true    # Average 3 trials per image (validation)
+
+  # Data augmentation
+  augment_noise_train: true   # Add Gaussian noise to embeddings
+  noise_std: 0.1              # Std of Gaussian noise
+  augment_position_jitter: true  # Add position jitter to coordinates
+  jitter_std: 0.01            # Std of position jitter
+
+  # Preprocessing
+  apply_zscore_train: false   # Z-score normalize fMRI (training)
+  apply_zscore_val: false     # Z-score normalize fMRI (validation)
+
+training:
+  max_epochs: 100             # Maximum training epochs
+  lr: 5.0e-5                  # Learning rate
+  lr_min: 1.0e-6              # Minimum learning rate (cosine annealing)
+  weight_decay: 0.01          # AdamW weight decay
+  precision: "16-mixed"       # Mixed precision: "16-mixed" or "32"
+  gradient_clip_val: 1.0      # Gradient clipping value
+  accumulate_grad_batches: 1  # Gradient accumulation (increase if OOM)
+
+validation:
+  early_stopping_patience: 20 # Early stopping patience (epochs)
+  visualize_pointcloud: true  # Generate 3D point cloud visualizations
+  viz_every_n_epochs: 1       # Visualization frequency (epochs)
+  viz_num_samples: 2          # Number of samples to visualize
+
+# Notes:
+#
+# Flow Matching vs Diffusion:
+# - Faster sampling: 10-20 steps vs 50-1000
+# - Simpler training: Direct velocity prediction
+# - No noise schedule tuning needed
+# - Often matches diffusion quality
+#
+# Memory Management:
+# - Full graph (15k nodes, 125k edges) is memory intensive
+# - If OOM: reduce batch_size to 2 or 1
+# - Or increase accumulate_grad_batches to 2-4
+# - Consider using GCN instead of GAT (less memory)
+#
+# GNN Type:
+# - "gcn": Faster, less memory, simpler
+# - "gat": Learns edge weights, potentially better quality
+#
+# CFG (Classifier-Free Guidance):
+# - cfg_scale = 1.0: No guidance (fastest, baseline)
+# - cfg_scale = 2-4: Mild guidance (better quality)
+# - cfg_scale = 4-7: Strong guidance (may oversaturate)
+# - Requires 2x forward passes during inference
+#
+# Metrics:
+# - Pearson correlation: Primary metric (higher is better)
+# - Peak Pearson: Correlation on high-activation voxels
+# - MSE: Mean squared error (lower is better)
+# - Metrics computed on full 15724 voxels
+#
+# Visualization:
+# - 1D plots: pred vs target line plots
+# - 3D plots: Interactive point cloud (requires plotly)
+# - Saved in outputs/graph_flow/v1_full_graph/visualizations/

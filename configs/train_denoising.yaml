@@ -1,0 +1,35 @@
+model:
+  name: "DenoisingARM"
+  hidden_dim: 512
+  num_layers: 12 # Hạ xuống 2 lớp để giảm khả năng ghi nhớ
+  num_heads: 4
+  dropout: 0.5
+  visual_dim: 768
+  fmri_dim: 1000
+
+training:
+  batch_size: 64
+  lr: 0.0001
+  weight_decay: 0.3  # Tăng lên cực cao
+  max_epochs: 1000
+  precision: "fp16"
+  save_dir: "checkpoints/denoising_subj01"
+  sigma: 1.0 
+  vis_noise_std: 0.3 # Tăng mạnh nhiễu trên ảnh để nó không "nhớ mặt" được ảnh
+
+loss:
+  alpha: 3.0  # Hạ xuống mức vừa phải
+  tau: 0.5    
+  pearson_weight: 0.8 
+  std_weight: 1.0     
+
+data:
+  subject: 1
+  datalist_path: "dataset/nsd/metadata/datalist_mindeye2_sub01.json"
+  fmri_path: "dataset/nsd/subj01/betas_all_subj01_fp32_renorm.hdf5"
+  train_embeddings_path: "dataset/nsd/embeddings_mindeye2/dinov2_train_sub01.npy"
+  test_embeddings_path: "dataset/nsd/embeddings_mindeye2/dinov2_test_sub01.npy"
+  parcel_labels_path: "dataset/nsd/subj01/betas_all_subj01_fp32_renorm_kmeans1000_labels.npy"
+  average_trials_train: false # Trung bình hóa để lấy signal thật
+  average_trials_val: true
+  augment_noise_train: false # Làm nhiễu visual feature

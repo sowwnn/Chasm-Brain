@@ -1,0 +1,15 @@
+# Additional requirements for Graph Diffusion ARM
+
+# Graph Neural Networks
+torch-geometric>=2.4.0
+torch-scatter>=2.1.2
+torch-sparse>=0.6.18
+
+# Visualization
+plotly>=5.18.0
+kaleido>=0.2.1  # For static image export from plotly
+
+# Data processing (if not already installed)
+joblib>=1.3.0
+h5py>=3.10.0
+scipy>=1.11.0

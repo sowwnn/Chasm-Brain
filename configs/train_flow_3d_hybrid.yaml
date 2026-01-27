@@ -1,0 +1,63 @@
+# Configuration for Flow3DHybridARM Training
+# Hybrid GNN+CNN Flow Matching for 3D fMRI Generation
+
+experiment:
+  name: "flow_3d_hybrid_arm"
+  version: "v1_mask_cond"  # v1 with mask conditioning
+  seed: 42
+  save_dir: "outputs"
+
+data:
+  # 3D mapping file (created from notebook)
+  mapping_path: "/home/sowwn/Workspace/ws/2026/I2fMRI/data/fmri_3d_compact_mapping_subj01.npz"
+
+  # fMRI data (1D, will be converted to 3D)
+  fmri_path: "/home/sowwn/Workspace/ws/2026/I2fMRI/dataset/nsd/subj01/betas_all_subj01_fp32_renorm.hdf5"
+
+  # Visual embeddings (DINOv2)
+  embeddings_train_path: "dataset/nsd/embeddings_mindeye2/dinov2_train_sub01.npy"
+  embeddings_test_path: "dataset/nsd/embeddings_mindeye2/dinov2_test_sub01.npy"
+
+
+  batch_size: 8  # Smaller batch for 3D volumes (memory intensive)
+  num_workers: 8
+
+model:
+  input_dim: 768  # DINOv2 embedding dimension
+  hidden_dim: 128  # Base hidden dimension (will create [32, 64, 128, 256])
+  time_dim: 256
+
+  # Architecture options
+  use_graph_layers: false  # Disable GNN layers (too slow for 3D, CNN is enough!)
+  use_mask_conditioning: true  # Use mask as second input (RECOMMENDED)
+
+  dropout: 0.1
+  cfg_dropout: 0.1  # Classifier-free guidance dropout
+  flow_sigma: 0.0  # OT flow (deterministic), set >0 for stochastic
+
+  # Sampling
+  sample_steps: 20  # Number of integration steps (10-20 typical)
+  cfg_scale: 1.0  # CFG scale (1.0 = no guidance, 1.5-2.0 recommended)
+
+  loss:
+    alpha: 10.0  # Peak loss weight
+    tau: 0.5  # Peak threshold (50th percentile)
+    pearson_weight: 0.1  # Pearson correlation loss weight
+    mask_weight: 2.0  # Extra weight for brain voxels
+
+training:
+  max_epochs: 100
+  lr: 1.0e-4
+  weight_decay: 0.05
+  gradient_clip_val: 1.0
+  precision: "32"  # or "16-mixed" for mixed precision
+
+logging:
+  viz_every_n_epochs: 1  # Visualize every N epochs
+
+# Notes:
+# - Compact 3D shape: (61, 46, 42) = 117,852 voxels
+# - Brain voxels: 15,724 (13.3% occupancy)
+# - Mask conditioning helps model focus on brain regions
+# - Graph layers add ~10% overhead but improve long-range modeling
+# - Evaluation on both 3D and 1D (lossless conversion)

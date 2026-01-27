@@ -1,0 +1,41 @@
+model:
+  name: "DenoisingARM"
+  hidden_dim: 1024           # Tăng lên để xử lý 15k voxels
+  num_layers: 8              # Tăng số layers cho capacity lớn hơn
+  num_heads: 8               # Multi-head attention
+  dropout: 0.3               # Dropout cao hơn để tránh overfit
+  visual_dim: 768
+  fmri_dim: 15724            # 15k voxels (không dùng parcellation)
+
+training:
+  batch_size: 32             # Giảm batch size vì 15k lớn hơn
+  lr: 0.0001
+  weight_decay: 0.1          # Weight decay cao để regularize
+  max_epochs: 200
+  precision: "fp16"          # Mixed precision để tiết kiệm memory
+  save_dir: "checkpoints/denoising_15k_subj01"
+  sigma: 0.5                 # Noise level vừa phải
+  vis_noise_std: 0.2         # Visual feature noise
+
+loss:
+  alpha: 2.5                 # Peak-focused loss
+  tau: 0.5    
+  pearson_weight: 0.8 
+  std_weight: 1.0            # Amplitude matching
+
+data:
+  subject: 1
+  datalist_path: "dataset/nsd/metadata/datalist_mindeye2_sub01.json"
+  fmri_path: "dataset/nsd/subj01/betas_all_subj01_fp32_renorm.hdf5"
+  train_embeddings_path: "dataset/nsd/embeddings_mindeye2/dinov2_train_sub01.npy"
+  test_embeddings_path: "dataset/nsd/embeddings_mindeye2/dinov2_test_sub01.npy"
+  parcel_labels_path: null   # KHÔNG dùng parcellation
+  use_parcellation: false    # QUAN TRỌNG: Tắt parcellation
+  average_trials_train: false
+  average_trials_val: true
+  augment_noise_train: true  # Data augmentation
+  noise_std: 0.15
+
+hardware:
+  accelerator: "gpu"
+  devices: 1

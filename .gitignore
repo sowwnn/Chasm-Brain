@@ -1,0 +1,27 @@
+# IDE / System
+.vscode/
+.idea/
+.DS_Store
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Training artifacts
+checkpoints/
+outputs/
+logs/
+tensorboard/
+*.pth
+*.ckpt
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Temporary files
+*.tmp
+*.log
