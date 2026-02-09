@@ -21,7 +21,7 @@ training:
   weight_decay: 0.05  # Reduced from 0.1 to prevent NaN
   max_epochs: 300
   precision: "fp16"
-  save_dir: "checkpoints/hierarchical_v21_subj01"
+  save_dir: "checkpoints/hierarchical_v22_subj01"
   vis_noise_std: 0.15
   stage: 1             # Start with Stage 1
   stage_1_epochs: 200
