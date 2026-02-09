@@ -18,7 +18,7 @@ from nilearn import plotting
 from pathlib import Path
 import yaml
 
-from ARMNet.hierarchical_v2 import HierarchicalARM_V2
+from model.hierarchical_v2 import HierarchicalARM_V2
 from data.dataset import create_dataloaders
 
 

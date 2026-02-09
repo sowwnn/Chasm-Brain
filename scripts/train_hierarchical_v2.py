@@ -15,9 +15,9 @@ import torch.nn.functional as F
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from ARMNet.hierarchical_v2 import HierarchicalARM_V2
-from ARMNet.contrastive_loss import InfoNCELoss
-from ARMNet.loss import PeakFocusedLoss
+from model.hierarchical_v2 import HierarchicalARM_V2
+from model.contrastive_loss import InfoNCELoss
+from model.loss import PeakFocusedLoss
 from data.dataset import create_dataloaders
 import matplotlib.pyplot as plt
 
