@@ -1,0 +1,33 @@
+model:
+  name: "SpatialDenoisingARM"
+  hidden_dim: 512            # Dimension per voxel
+  num_layers: 4             # Number of refinement layers
+  dropout: 0.2
+  visual_dim: 768
+
+training:
+  batch_size: 32            # High speed allows decent batch size
+  lr: 3.0e-4
+  weight_decay: 0.05
+  max_epochs: 200
+  precision: "fp16"
+  save_dir: "checkpoints/spatial_1d_subj01"
+  vis_noise_std: 0.2
+
+loss:
+  alpha: 2.0
+  tau: 0.2
+  pearson_weight: 0.8       # Focus on spatial patterns
+
+data:
+  subject: 1
+  datalist_path: "dataset/nsd/metadata/datalist_mindeye2_sub01.json"
+  fmri_path: "dataset/nsd/subj01/betas_all_subj01_fp32_renorm.hdf5"
+  train_embeddings_path: "dataset/nsd/embeddings_mindeye2/dinov2_train_sub01.npy"
+  test_embeddings_path: "dataset/nsd/embeddings_mindeye2/dinov2_test_sub01.npy"
+  mapping_path: "data/fmri_3d_compact_mapping_subj01.npz"
+  roi_mapping_path: "dataset/nsd/metadata/subj01_roi_mapping.npz"
+  average_trials_train: false
+  average_trials_val: true
+  augment_noise_train: true
+  noise_std: 0.1

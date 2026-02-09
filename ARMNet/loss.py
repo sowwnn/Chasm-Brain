@@ -39,31 +39,39 @@ class PeakFocusedLoss(nn.Module):
         with torch.no_grad():
             deviation = torch.abs(target - mean_fmri)
             # Trọng số tăng mạnh khi deviation > tau
-            # Trọng số min là 1.0 (cho vùng gần Mean)
+            # Giới hạn weight max = 10.0 để tránh overflow trong fp16
             weights = 1.0 + self.alpha * torch.relu(deviation - self.tau)
+            weights = torch.clamp(weights, max=10.0)
         
         # 3. Weighted MSE
+        # Clamp mse_loss to avoid huge values before mean (FP16 safe: 65504 max)
+        mse_loss = torch.clamp(mse_loss, max=50.0)  # Reduced from 100 for fp16
         weighted_mse = (mse_loss * weights).mean()
 
-        # 4. Pearson Correlation Loss (để khớp "hình dáng" tín hiệu)
-        # 1 - corr (giá trị từ 0 đến 2, mong muốn về 0)
+        # 4. Pearson Correlation Loss
         p_loss = 0
         if self.pearson_weight > 0:
-            # Centering
             pred_c = pred - pred.mean(dim=1, keepdim=True)
             target_c = target - target.mean(dim=1, keepdim=True)
 
-            # Cosine similarity của centered vectors = Pearson correlation
-            sim = F.cosine_similarity(pred_c, target_c, dim=1)
-            p_loss = (1 - sim).mean()
+            # Normalize để tránh zero-division (critical for fp16)
+            pred_norm = torch.sqrt((pred_c ** 2).sum(dim=1, keepdim=True) + 1e-8)
+            target_norm = torch.sqrt((target_c ** 2).sum(dim=1, keepdim=True) + 1e-8)
+            pred_c = pred_c / pred_norm
+            target_c = target_c / target_norm
+
+            # Cosine similarity với epsilon phòng NaN
+            sim = F.cosine_similarity(pred_c, target_c, dim=1, eps=1e-8)
+            sim = torch.clamp(sim, min=-1.0, max=1.0)  # Clamp to valid range for fp16
+            p_loss = (1 - sim).mean() # Average correlation loss across batch
 
         # 5. Amplitude (STD) Matching Loss
-        # Ép độ lệch chuẩn của dự đoán phải tương đồng với target
         std_loss = 0
         if self.std_weight > 0:
-            pred_std = pred.std(dim=1)
-            target_std = target.std(dim=1)
+            pred_std = pred.std(dim=1) + 1e-8  # Add epsilon to prevent division by zero
+            target_std = target.std(dim=1) + 1e-8
             std_loss = F.mse_loss(pred_std, target_std)
+            std_loss = torch.clamp(std_loss, max=10.0)
 
         # Total Loss
         total_loss = (1 - self.pearson_weight) * weighted_mse + \
@@ -250,3 +258,113 @@ class DiffusionPeakFocusedLoss(nn.Module):
         }
 
         return total_loss, loss_dict
+
+
+class MaskedPeakFocusedLoss(nn.Module):
+    """
+    Peak-Focused Loss với mask theo vùng não.
+    Chỉ tính loss trên các voxels thuộc brain region (visual streams).
+
+    Lý do sử dụng:
+    - Không phải tất cả 15,724 voxels đều thuộc vùng não quan trọng
+    - Tập trung vào ~15,665 voxels thuộc visual streams
+    - Giảm noise từ voxels không liên quan
+    """
+    def __init__(self, mask, alpha=3.0, tau=0.5, pearson_weight=0.5, std_weight=1.0):
+        """
+        Args:
+            mask: [N] boolean tensor hoặc numpy array - True = tính loss cho voxel này
+            alpha: Hệ số khuếch đại cho các vùng Peak
+            tau: Ngưỡng chênh lệch so với Mean để bắt đầu coi là Peak
+            pearson_weight: Trọng số cho hàm loss dựa trên tương quan Pearson
+            std_weight: Trọng số ép biên độ (std) của dự đoán khớp với thực tế
+        """
+        super().__init__()
+
+        # Convert mask to tensor và register as buffer (không train)
+        if not torch.is_tensor(mask):
+            mask = torch.tensor(mask, dtype=torch.bool)
+        self.register_buffer('mask', mask)
+
+        self.alpha = alpha
+        self.tau = tau
+        self.pearson_weight = pearson_weight
+        self.std_weight = std_weight
+
+        self.n_masked = mask.sum().item()
+        self.n_total = mask.shape[0]
+
+    def forward(self, pred, target, mean_fmri):
+        """
+        Args:
+            pred: [B, N] dự đoán của mô hình
+            target: [B, N] ground truth
+            mean_fmri: [B, N] hoặc [1, N] giá trị trung bình voxel
+        """
+        # Apply mask: chỉ lấy các voxels trong brain region
+        pred_masked = pred[:, self.mask]          # [B, n_masked]
+        target_masked = target[:, self.mask]      # [B, n_masked]
+
+        # Expand mean_fmri nếu cần
+        if mean_fmri.dim() == 1:
+            mean_fmri = mean_fmri.unsqueeze(0)
+        mean_masked = mean_fmri[:, self.mask]     # [B, n_masked] or [1, n_masked]
+
+        # 1. Base MSE per voxel (masked)
+        mse_loss = (pred_masked - target_masked) ** 2
+
+        # 2. Tính độ lệch của GT so với Mean để xác định Peak
+        with torch.no_grad():
+            deviation = torch.abs(target_masked - mean_masked)
+            weights = 1.0 + self.alpha * torch.relu(deviation - self.tau)
+
+        # 3. Weighted MSE
+        weighted_mse = (mse_loss * weights).mean()
+
+        # 4. Pearson Correlation Loss (trên masked voxels)
+        p_loss = torch.tensor(0.0, device=pred.device)
+        if self.pearson_weight > 0:
+            pred_c = pred_masked - pred_masked.mean(dim=1, keepdim=True)
+            target_c = target_masked - target_masked.mean(dim=1, keepdim=True)
+            sim = F.cosine_similarity(pred_c, target_c, dim=1)
+            p_loss = (1 - sim).mean()
+
+        # 5. Amplitude (STD) Matching Loss
+        std_loss = torch.tensor(0.0, device=pred.device)
+        if self.std_weight > 0:
+            pred_std = pred_masked.std(dim=1)
+            target_std = target_masked.std(dim=1)
+            std_loss = F.mse_loss(pred_std, target_std)
+
+        # Total Loss
+        total_loss = (1 - self.pearson_weight) * weighted_mse + \
+                     self.pearson_weight * p_loss + \
+                     self.std_weight * std_loss
+
+        return total_loss
+
+    @classmethod
+    def from_roi_mapping(cls, roi_mapping_path, mask_field='streams',
+                         alpha=3.0, tau=0.5, pearson_weight=0.5, std_weight=1.0):
+        """
+        Tạo MaskedPeakFocusedLoss từ file ROI mapping.
+
+        Args:
+            roi_mapping_path: Path đến file .npz chứa ROI mapping
+            mask_field: Tên field trong npz để tạo mask ('streams', 'visual_rois', etc.)
+
+        Returns:
+            MaskedPeakFocusedLoss instance
+        """
+        import numpy as np
+        data = np.load(roi_mapping_path)
+        roi_data = data[mask_field]
+
+        # Mask: voxels thuộc brain region (value > 0)
+        # -1 hoặc 0 thường là background/outside brain
+        mask = roi_data > 0
+
+        print(f"Loaded brain mask from '{mask_field}': {mask.sum()}/{len(mask)} voxels")
+
+        return cls(mask, alpha=alpha, tau=tau,
+                   pearson_weight=pearson_weight, std_weight=std_weight)

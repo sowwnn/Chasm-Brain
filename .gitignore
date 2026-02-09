@@ -25,3 +25,5 @@ tensorboard/
 # Temporary files
 *.tmp
 *.log
+
+dataset/

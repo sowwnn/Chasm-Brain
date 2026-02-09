@@ -6,10 +6,11 @@ model:
   dropout: 0.3               # Dropout cao hơn để tránh overfit
   visual_dim: 768
   fmri_dim: 15724            # 15k voxels (không dùng parcellation)
+  output_clamp: null         # Tạm bỏ clamp để debug
 
 training:
-  batch_size: 32             # Giảm batch size vì 15k lớn hơn
-  lr: 0.0001
+  batch_size: 64             # Giảm batch size vì 15k lớn hơn
+  lr: 1.0e-3
   weight_decay: 0.1          # Weight decay cao để regularize
   max_epochs: 200
   precision: "fp16"          # Mixed precision để tiết kiệm memory
@@ -18,10 +19,12 @@ training:
   vis_noise_std: 0.2         # Visual feature noise
 
 loss:
-  alpha: 2.5                 # Peak-focused loss
-  tau: 0.5    
-  pearson_weight: 0.8 
-  std_weight: 1.0            # Amplitude matching
+  alpha: 1.0                 # Giảm peak focus, học pattern cơ bản trước
+  tau: 0.3
+  pearson_weight: 0.9        # Tăng correlation weight - quan trọng nhất
+  std_weight: 0.1            # Giảm mạnh std matching - tránh mode collapse
+  use_mask: true             # Sử dụng MaskedPeakFocusedLoss
+  mask_field: "streams"      # Mask theo visual streams (6 streams)
 
 data:
   subject: 1
@@ -29,8 +32,7 @@ data:
   fmri_path: "dataset/nsd/subj01/betas_all_subj01_fp32_renorm.hdf5"
   train_embeddings_path: "dataset/nsd/embeddings_mindeye2/dinov2_train_sub01.npy"
   test_embeddings_path: "dataset/nsd/embeddings_mindeye2/dinov2_test_sub01.npy"
-  parcel_labels_path: null   # KHÔNG dùng parcellation
-  use_parcellation: false    # QUAN TRỌNG: Tắt parcellation
+  roi_mapping_path: "dataset/nsd/metadata/subj01_roi_mapping.npz"  # Brain ROI mapping
   average_trials_train: false
   average_trials_val: true
   augment_noise_train: true  # Data augmentation

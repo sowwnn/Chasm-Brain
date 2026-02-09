@@ -1,0 +1,38 @@
+model:
+  name: "Denoising3DUNet"
+  hidden_dim: 64             # Increased capacity
+  dropout: 0.2
+  visual_dim: 768            # DINOv2 dimension
+  
+training:
+  batch_size: 32             # Lower batch size for 3D model memory
+  lr: 2.0e-4                 # Lower LR for 3D stability
+  weight_decay: 0.05
+  max_epochs: 150
+  precision: "fp16"
+  save_dir: "checkpoints/denoising_3d_v2_subj01"
+  vis_noise_std: 0.2
+
+loss:
+  alpha: 2.0                 # Slightly lower alpha for 3D stability
+  tau: 0.3
+  pearson_weight: 0.8        # Focus on pattern shape
+  use_mask: true
+  mask_field: "streams"
+
+data:
+  subject: 1
+  datalist_path: "dataset/nsd/metadata/datalist_mindeye2_sub01.json"
+  fmri_path: "dataset/nsd/subj01/betas_all_subj01_fp32_renorm.hdf5"
+  train_embeddings_path: "dataset/nsd/embeddings_mindeye2/dinov2_train_sub01.npy"
+  test_embeddings_path: "dataset/nsd/embeddings_mindeye2/dinov2_test_sub01.npy"
+  mapping_path: "data/fmri_3d_compact_mapping_subj01.npz"        # 1D <-> 3D mapping
+  roi_mapping_path: "dataset/nsd/metadata/subj01_roi_mapping.npz" # Brain ROI mapping
+  average_trials_train: false
+  average_trials_val: true
+  augment_noise_train: true
+  noise_std: 0.15
+
+hardware:
+  accelerator: "gpu"
+  devices: 1

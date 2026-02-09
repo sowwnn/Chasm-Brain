@@ -2,7 +2,7 @@
 NeuroFluxSDE Data Module - DINOv2-based fMRI Synthesis
 """
 
-from .neuroflux_dataset import (
+from .dataset import (
     NeuroFluxDataset,
     SubjectSampler,
     load_neuroflux_data,

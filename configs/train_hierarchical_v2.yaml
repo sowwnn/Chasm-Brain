@@ -1,0 +1,57 @@
+
+model:
+  name: "HierarchicalARM_V2"
+  visual_dim: 768
+  fmri_dim: 15724
+  num_clusters: 518
+  # Stage 1
+  hidden_dim_1: 1024
+  layers_1: 4
+  contrastive_dim: 256
+  # Stage 2 (Hybrid Transformer/Mamba)
+  embed_dim_2: 512
+  depth_2: 6
+  num_heads_2: 8
+  num_global_queries: 128  # Number of learnable queries for global branch
+  use_mamba: false # Set to true if mamba_ssm is installed
+
+training:
+  batch_size: 128 # Transformer benefits from larger batches for contrastive
+  lr: 8.0e-5  # Reduced from 2e-4 for fp16 stability
+  weight_decay: 0.05  # Reduced from 0.1 to prevent NaN
+  max_epochs: 300
+  precision: "fp16"
+  save_dir: "checkpoints/hierarchical_v21_subj01"
+  vis_noise_std: 0.15
+  stage: 1             # Start with Stage 1
+  stage_1_epochs: 200
+  viz_interval: 5      # Visualize validation every N epochs
+  # LR Scheduler
+  use_scheduler: true
+  warmup_epochs: 5  # Increased from 5 for more gradual warmup
+  scheduler_type: "cosine"  # cosine or step
+  # Early Stopping
+  early_stopping: true
+  patience: 15  # Stop if val doesn't improve for 15 epochs   
+
+loss:
+  alpha: 2.0
+  tau: 0.2
+  pearson_weight: 0.3  # Reduced from 0.5 for fp16 stability
+  contrastive_weight: 0.2  # Reduced from 0.1 (InfoNCE was 4.9 -> exploding)
+  std_weight: 0.3  # Reduced from 0.2 to prevent NaN from std division
+  peak_alpha: 0.5  # Reduced from 1.5 to prevent overflow in fp16
+  peak_tau: 0.3  # Increased from 0.3 to reduce number of high-weight peaks
+  
+data:
+  subject: 1
+  datalist_path: "dataset/nsd/metadata/datalist_mindeye2_sub01.json"
+  fmri_path: "dataset/nsd/subj01/betas_all_subj01_fp32_renorm.hdf5"
+  train_embeddings_path: "dataset/nsd/embeddings_mindeye2/dinov2_train_sub01.npy"
+  test_embeddings_path: "dataset/nsd/embeddings_mindeye2/dinov2_test_sub01.npy"
+  sub_roi_cluster_path: "data/sub_roi_labels.npy"
+  average_trials_train: false
+  average_trials_val: true
+  augment_noise_train: true
+  noise_std: 0.1
+  roi_top_k_percent: 0.75  # Use top 75% voxels for ROI aggregation (null for uniform mean)

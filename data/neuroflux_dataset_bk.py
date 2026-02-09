@@ -123,13 +123,16 @@ class NeuroFluxDataset(Dataset):
         noise_std: float = 0.1,           # Std of Gaussian noise
         parcel_mapper: Optional[ParcelMapper] = None,  # NEW: Parcellation mapper
         apply_zscore: bool = False,       # NEW: Apply z-score to fMRI
+        sub_roi_cluster_path: Optional[str] = None, # NEW: Path to sub-ROI cluster labels
         **kwargs, # Absorb unused arguments
     ):
-        self.embeddings = embeddings
+        # Convert embeddings to float16 for memory efficiency
+        self.embeddings = embeddings.astype(np.float16) if embeddings.dtype != np.float16 else embeddings
         self.augment_noise = augment_noise
         self.noise_std = noise_std
         self.parcel_mapper = parcel_mapper  # NEW
         self.apply_zscore = apply_zscore    # NEW
+        self.sub_roi_cluster_path = sub_roi_cluster_path
 
         # Storage
         self.fmri_list = []
@@ -144,9 +147,9 @@ class NeuroFluxDataset(Dataset):
             self.fmri_list.append(fmri_s)
             self.image_id_list.append(ids_s)
             self.subject_ids.extend([subj] * len(fmri_s))
-        # Concatenate all
+        # Concatenate all (use float16 for memory efficiency)
         if len(self.fmri_list) > 0:
-            self.fmri_data = np.concatenate(self.fmri_list, axis=0).astype(np.float32)
+            self.fmri_data = np.concatenate(self.fmri_list, axis=0).astype(np.float16)
             self.image_id_data = np.concatenate(self.image_id_list, axis=0).astype(np.int32)
             self.subject_ids = np.array(self.subject_ids)
         else:
@@ -166,12 +169,45 @@ class NeuroFluxDataset(Dataset):
             self.fmri_data = ParcelMapper.zscore(self.fmri_data)
             print(f"Z-scored - Mean: {self.fmri_data.mean():.6f}, Std: {self.fmri_data.std():.6f}")
 
+        # Prepare clustering matrix if path provided and PRECOMPUTE roi_means
+        self.cluster_matrix = None
+        self.roi_means_data = None
+        if self.sub_roi_cluster_path is not None:
+            if os.path.exists(self.sub_roi_cluster_path):
+                print(f"Loading sub-ROI clusters from {self.sub_roi_cluster_path}...")
+                labels = np.load(self.sub_roi_cluster_path)
+                n_voxels = len(labels)
+                n_clusters = labels.max() + 1
+
+                # Check dimension match
+                current_voxels = self.fmri_data.shape[1]
+                if n_voxels != current_voxels:
+                    print(f"Warning: Cluster labels ({n_voxels}) do not match fMRI shape ({current_voxels}). Skipping clustering.")
+                else:
+                    # Build aggregation matrix (K, N)
+                    self.cluster_matrix = np.zeros((n_clusters, n_voxels), dtype=np.float32)
+                    for i in range(n_clusters):
+                        mask = (labels == i)
+                        if mask.sum() > 0:
+                            self.cluster_matrix[i, mask] = 1.0 / mask.sum()
+                    print(f"Sub-ROI Matrix created: {self.cluster_matrix.shape}")
+
+                    # OPTIMIZATION: Precompute all roi_means to avoid per-sample computation
+                    print(f"Precomputing ROI means for {len(self.fmri_data)} samples...")
+                    # Convert to float32 temporarily for accurate computation, then back to float16
+                    self.roi_means_data = (self.cluster_matrix @ self.fmri_data.astype(np.float32).T).T.astype(np.float16)
+                    print(f"ROI means precomputed: {self.roi_means_data.shape}")
+            else:
+                print(f"Warning: Sub-ROI path {self.sub_roi_cluster_path} not found.")
+
         aug_str = f"with noise augmentation (std={noise_std})" if augment_noise else "without augmentation"
         parcel_str = f", parcellated to {self.parcel_mapper.n_parcels} parcels" if parcel_mapper else ""
         zscore_str = ", z-scored" if apply_zscore else ""
+        cluster_str = f", with {self.cluster_matrix.shape[0]} sub-ROIs" if self.cluster_matrix is not None else ""
+        
         print(f"NeuroFluxDataset: {len(self.fmri_data)} samples, "
               f"{len(np.unique(self.image_id_data))} unique images, "
-              f"embeddings shape: {self.embeddings.shape}, {aug_str}{parcel_str}{zscore_str}")
+              f"embeddings shape: {self.embeddings.shape}, {aug_str}{parcel_str}{zscore_str}{cluster_str}")
     
     def __len__(self):
         return len(self.fmri_data)
@@ -182,19 +218,25 @@ class NeuroFluxDataset(Dataset):
         subject_id = self.subject_ids[idx]
 
         # Get DINOv2 embedding from the split-specific file
-        embedding = self.embeddings[image_id_in_split].astype(np.float32)
+        embedding = self.embeddings[image_id_in_split]
 
         # Apply noise augmentation to embedding during training (if enabled)
         if self.augment_noise:
             noise = np.random.normal(0, self.noise_std, embedding.shape).astype(np.float32)
             embedding = embedding + noise
 
-        return {
+        item = {
             'fmri': torch.from_numpy(fmri).float(),
-            'embedding': torch.from_numpy(embedding),
-            'image_id': image_id_in_split, # This is now an index, not a global ID
+            'embedding': torch.from_numpy(embedding).float(),
+            'image_id': image_id_in_split,
             'subject_id': subject_id
         }
+
+        # Use precomputed ROI means (no computation in __getitem__)
+        if self.roi_means_data is not None:
+            item['roi_means'] = torch.from_numpy(self.roi_means_data[idx]).float()
+
+        return item
 
 
 class NeuroFluxConcatDataset(ConcatDataset):
@@ -251,6 +293,7 @@ def load_neuroflux_data(
     noise_std: float = 0.1,           # Noise std for augmentation
     parcel_labels_path: Optional[str] = None,  # NEW: Path to parcellation labels
     apply_zscore: bool = False,       # NEW: Apply z-score to fMRI
+    sub_roi_cluster_path: Optional[str] = None, # NEW: Path to sub-ROI cluster labels
 ) -> NeuroFluxDataset:
     """
     Load data for NeuroFlux-SDE from preprocessed MindEye2-style data.
@@ -266,6 +309,7 @@ def load_neuroflux_data(
         noise_std: Noise std for augmentation.
         parcel_labels_path: Path to .npy file with parcellation labels (optional).
         apply_zscore: Apply z-score normalization to fMRI after parcellation.
+        sub_roi_cluster_path: Path to .npy file with sub-ROI cluster labels (optional).
 
     Returns:
         NeuroFluxDataset instance
@@ -367,6 +411,7 @@ def load_neuroflux_data(
         noise_std=noise_std,
         parcel_mapper=parcel_mapper,
         apply_zscore=apply_zscore,
+        sub_roi_cluster_path=sub_roi_cluster_path,
     )
 
     return dataset
@@ -386,6 +431,7 @@ def create_dataloaders(
     parcel_labels_path: Optional[str] = None,  # NEW: Parcellation labels
     apply_zscore_train: bool = False,     # NEW: Z-score for training
     apply_zscore_val: bool = False,       # NEW: Z-score for validation
+    sub_roi_cluster_path: Optional[str] = None, # NEW: Path to sub-ROI cluster labels
 ) -> tuple:
     """
     Create train and validation dataloaders from preprocessed MindEye2-style data.
@@ -404,6 +450,7 @@ def create_dataloaders(
         parcel_labels_path: Path to parcellation labels (optional)
         apply_zscore_train: Apply z-score to training data
         apply_zscore_val: Apply z-score to validation data
+        sub_roi_cluster_path: Path to sub-ROI cluster labels
 
     Returns:
         (train_loader, val_loader)
@@ -420,6 +467,7 @@ def create_dataloaders(
         noise_std=noise_std,
         parcel_labels_path=parcel_labels_path,
         apply_zscore=apply_zscore_train,
+        sub_roi_cluster_path=sub_roi_cluster_path,
     )
 
 
@@ -437,6 +485,7 @@ def create_dataloaders(
         noise_std=0.0,
         parcel_labels_path=parcel_labels_path,
         apply_zscore=apply_zscore_val,
+        sub_roi_cluster_path=sub_roi_cluster_path,
     )
 
     # Use custom concat dataset to preserve subject_ids
@@ -444,9 +493,24 @@ def create_dataloaders(
     # train_loader = DataLoader(combined_dataset, batch_sampler=train_sampler, num_workers=4)
 
     train_sampler = SubjectSampler(train_dataset, batch_size=batch_size, drop_last=True)
-    train_loader = DataLoader(train_dataset, batch_sampler=train_sampler, num_workers=8, pin_memory=True)
-    
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=8, pin_memory=True)
+    train_loader = DataLoader(
+        train_dataset,
+        batch_sampler=train_sampler,
+        num_workers=8,
+        pin_memory=True,
+        persistent_workers=True,  # Keep workers alive between epochs
+        prefetch_factor=4          # Prefetch 4 batches per worker
+    )
+
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=8,
+        pin_memory=True,
+        persistent_workers=True,
+        prefetch_factor=4
+    )
 
     return train_loader, val_loader
 
