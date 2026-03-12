@@ -1,0 +1,137 @@
+
+\section{Proposed Method}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\textwidth]{figure/architecture.pdf}
+  \caption{Overview of the proposed hierarchical two-stage framework for image-to-fMRI reconstruction.
+    \textbf{Stage 1 (Coarse)}: A dual-stream Mamba architecture processes global (CLS token) and local (patch tokens) visual features separately, then fuses them via an adaptive gate to predict ROI-level activations.
+  \textbf{Stage 2 (Fine)}: A Mamba-VAE architecture takes the visual features and ROI predictions as input, encodes them through Mamba blocks, samples from a learned latent space, and decodes to full voxel-level fMRI predictions through parallel global and local branches.}
+  \label{fig:architecture}
+\end{figure}
+
+We propose a hierarchical two-stage framework for image-to-fMRI reconstruction, as shown in Figure~\ref{fig:architecture}. Stage 1 first predicts denoised responses at the ROI (Region of Interest) level, and Stage 2 then refines these coarse responses into full voxel-level predictions. This design separates robust semantic alignment from fine-grained signal recovery, which makes the overall learning process more stable. Crucially, Stage 1's dual-stream architecture extracts and encodes local spatial details into ROI representations, allowing Stage 2 to focus on refinement using these encoded structures rather than re-extracting features from raw patches.
+
+\subsection{Stage 1: Dual-Stream Mamba for Coarse Prediction}
+
+Stage 1 learns ROI-level neural responses from visual inputs by combining complementary cues: global semantics and local spatial details. To this end, we use a dual-stream architecture where each stream specializes in one type of visual representation and both streams are fused adaptively.
+
+\subsubsection{Visual Feature Extraction}
+
+Given an input image $I$, we extract visual features using a pretrained DINOv2 encoder~\cite{oquab2023dinov2}. The encoder outputs two representations:
+\begin{itemize}
+  \item \textbf{CLS token}: a single vector summarizing global image semantics.
+  \item \textbf{Patch tokens}: a sequence of vectors preserving local spatial structure.
+\end{itemize}
+We choose DINOv2 because it is pretrained via self-supervised learning, which is effective for capturing fine visual details and structural patterns. This property is well aligned with our hypothesis that both detailed local structure and global visual semantics are critical for accurate image-to-fMRI reconstruction.
+
+\subsubsection{ROI Aggregation for Noise Reduction}
+
+Directly regressing all voxels (e.g., 15,724 dimensions) is difficult because fMRI signals are high-dimensional and noisy, with variance from physiological artifacts, scanner noise, and trial-level fluctuations. Therefore, Stage 1 predicts ROI-level targets as an intermediate denoising step.
+
+We partition voxels into $K$ non-overlapping clusters, each containing $V$ spatially adjacent voxels. Compared with anatomical parcellations such as Schaefer~\cite{schaefer2018local}, our sequential clustering provides flexible granularity tailored to the target voxel space.
+
+For each cluster, instead of averaging all voxels, we aggregate only the top-$p$\% activations:
+\begin{equation}
+  r_k = \frac{1}{|S_k|} \sum_{i \in S_k} v_i
+  \quad \text{where} \quad S_k = \text{TopK}(\{v_i\}_{i \in C_k}, \lfloor p \cdot V \rfloor)
+\end{equation}
+where $r_k$ is the aggregated value of ROI $k$, $C_k$ is the voxel index set of cluster $k$, and $\text{TopK}$ returns the highest-activation subset. This strategy preserves informative peaks while reducing low-activation noise; it is especially useful after z-score normalization, where naive mean aggregation can collapse toward zero.
+
+\subsubsection{Global Branch}
+
+The Global branch models high-level semantics from the CLS token. It consists of a linear projection, layer normalization, a stack of Mamba blocks~\cite{mamba2}, and a final normalized linear head for ROI prediction.
+
+We adopt Mamba primarily because its selective state-space mechanism can focus on task-relevant information while suppressing irrelevant signals, which aligns well with brain activity prediction.
+
+\subsubsection{Local Branch}
+
+The Local branch models fine-grained structure from patch tokens. We first project patch tokens, add learnable positional embeddings, and apply normalization. The sequence is then processed by a deeper stack of Mamba blocks than in the Global branch, reflecting the larger token sequence (256 patches). Finally, mean pooling and a two-layer GELU MLP produce ROI-level predictions.
+
+\subsubsection{Adaptive Fusion Gate}
+
+To combine the two streams, we use a learnable fusion gate rather than fixed coefficients. The gate takes concatenated global/local features, applies a two-layer GELU MLP, and outputs softmax-based fusion weights. The final ROI prediction is
+\begin{equation}
+  \hat{\mathbf{r}} = \alpha \cdot \mathbf{r}_{g} + (1 - \alpha) \cdot \mathbf{r}_{l},
+\end{equation}
+where $\mathbf{r}_{g}$ and $\mathbf{r}_{l}$ are branch outputs and $\alpha \in [0,1]$ is learned per input. This mechanism lets the model emphasize global context for simple scenes and local details for complex scenes.
+
+\subsubsection{Contrastive Alignment}
+
+Beyond regression, we encourage representation-level alignment between image features and brain responses via a CLIP-style contrastive objective~\cite{pmlr-v139-radford21a}. Specifically, fused visual features and ground-truth ROI activations are projected into a shared embedding space using separate two-layer GELU projection heads with layer normalization. An InfoNCE loss then pulls matched image--brain pairs together while pushing mismatched pairs apart.
+
+\subsubsection{Training Objective}
+
+The Stage 1 objective combines pointwise regression, correlation alignment, and contrastive alignment:
+\begin{equation}
+  \mathcal{L}_{stage1} = \mathcal{L}_{MSE} + \gamma \cdot \mathcal{L}_{Pearson} + \lambda \cdot \mathcal{L}_{InfoNCE}.
+\end{equation}
+Here, $\mathcal{L}_{MSE}$ minimizes amplitude error between predicted and ground-truth ROI activations, $\mathcal{L}_{Pearson}$ encourages high correlation between their response patterns, and $\mathcal{L}_{InfoNCE}$ improves cross-modal discriminability. Hyperparameters $\gamma$ and $\lambda$ balance these three terms.
+
+\subsection{Stage 2: Mamba-VAE for Fine Prediction}
+
+Stage 2 maps coarse ROI predictions to full voxel resolution. We design this stage as a Mamba-VAE to jointly model structured dependencies and trial-to-trial variability in fMRI responses.
+
+\subsubsection{Input Fusion}
+
+Stage 2 receives two inputs: visual features from DINOv2 and ROI predictions from Stage 1 ($\hat{\mathbf{r}}$). We first project visual features (CLS token concatenated with pooled patch features) into a common embedding space. Notably, we use mean-pooled patch features rather than individual patch tokens, as Stage 1's Local branch has already extracted and encoded fine-grained spatial details into the ROI representations. This avoids redundant feature extraction and reduces computational overhead while maintaining spatial specificity through the ROI structure. Each ROI value is then tokenized and augmented with learnable positional embeddings to preserve region order. Concatenating visual and ROI tokens forms a unified sequence encoding both stimulus content and coarse neural priors.
+
+\subsubsection{Mamba Encoder}
+
+A stack of Mamba blocks encodes the fused sequence and learns interactions between visual evidence and predicted neural structure. This encoder produces latent token representations that capture global image--brain dependencies before voxel-level decoding.
+
+\subsubsection{Variational Latent Space}
+
+Because fMRI responses vary even for repeated presentations of the same stimulus, we model uncertainty with a variational latent space. After sequence encoding, pooled features are passed to a VAE head:
+\begin{equation}
+  \boldsymbol{\mu}, \log\boldsymbol{\sigma}^2 = \text{VAEEncoder}(\text{Pool}(\mathbf{h})).
+\end{equation}
+During training, we sample
+\begin{equation}
+  \mathbf{z} = \boldsymbol{\mu} + \boldsymbol{\sigma} \odot \boldsymbol{\epsilon}, \quad \boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}),
+\end{equation}
+and inject $\mathbf{z}$ back into token representations. During inference, we use $\boldsymbol{\mu}$ for deterministic prediction.
+
+\subsubsection{Feature Split for Dual Decoding}
+
+After latent injection, we obtain a shared token sequence $\tilde{\mathbf{H}} \in \mathbb{R}^{(K+1)\times d}$, including one visual token and $K$ ROI tokens. We then split features by token role (not by separate encoders): the full sequence is routed to a holistic decoder, while ROI tokens are selected and routed to an ROI-wise residual decoder. Formally,
+\begin{equation}
+  \tilde{\mathbf{H}}_{global} = \tilde{\mathbf{H}}, \quad \tilde{\mathbf{H}}_{local} = \tilde{\mathbf{H}}_{2:K+1}.
+\end{equation}
+This token-level split allows both decoders to share the same encoded context while specializing in complementary prediction behaviors.
+
+\subsubsection{Holistic Voxel Decoder}
+
+The Holistic Voxel Decoder predicts the full voxel vector jointly from the global context. We append learnable query tokens $\mathbf{q} \in \mathbb{R}^{M \times d}$ to the latent-injected sequence, process them with additional Mamba blocks, and map the resulting query features to voxel outputs. This branch captures long-range and cross-ROI dependencies.
+
+\subsubsection{ROI Residual Decoder}
+
+The ROI Residual Decoder predicts ROI-wise voxel details through residual learning. For each ROI token, a small MLP estimates voxel residuals relative to the Stage 1 coarse value:
+\begin{equation}
+  \mathbf{v}_k = r_k + \Delta_k,
+\end{equation}
+where $r_k$ is the coarse ROI prediction and $\Delta_k$ is the local residual. This formulation uses coarse predictions as priors and focuses local modeling capacity on fine corrections.
+
+\subsubsection{Prediction Fusion and Amplitude Recovery}
+
+The fused voxel prediction combines holistic and residual outputs:
+\begin{equation}
+  \mathbf{v}_{fused} = \alpha \cdot \mathbf{v}_{global} + (1 - \alpha) \cdot \mathbf{v}_{local},
+\end{equation}
+where $\alpha$ is a single global learnable parameter, in contrast to Stage 1's input-dependent adaptive gate. This simpler fusion is sufficient because both decoders read from the same shared representation and differ only in decoding granularity (holistic vs. ROI-residual).
+
+To recover appropriate response amplitudes, we apply a learnable scale-recovery layer conditioned on visual features:
+\begin{equation}
+  s = \text{Sigmoid}(\text{MLP}(\mathbf{h}_{vis})) \cdot \sigma,
+\end{equation}
+where $\mathbf{h}_{vis}$ is the visual token from the encoded sequence and $\sigma$ is a learnable scale bound. The final prediction is $\hat{\mathbf{v}} = s \cdot \mathbf{v}_{fused}$, allowing the model to adjust output magnitude based on stimulus complexity.
+
+\subsubsection{Training Objective}
+
+The Stage 2 objective balances voxel reconstruction and latent regularization:
+\begin{equation}
+  \mathcal{L}_{stage2} = \mathcal{L}_{MSE} + \beta \cdot \mathcal{L}_{KL},
+\end{equation}
+where $\mathcal{L}_{MSE}$ is voxel-level reconstruction loss and
+$\mathcal{L}_{KL} = D_{KL}(q(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z}))$ regularizes the posterior toward a standard Gaussian prior. The coefficient $\beta$ controls this trade-off.
+

@@ -1,0 +1,58 @@
+
+model:
+  name: "HierarchicalARM_V3"
+  cls_dim: 768
+  patch_dim: 768
+  num_patches: 256
+  fmri_dim: 15724
+  voxels_per_cluster: 10  # NEW: Dynamic ROI count = fmri_dim // voxels_per_cluster = 524
+  # Stage 1 (Dual-Stream Mamba)
+  hidden_dim_1: 512
+  depth_what: 2   # Mamba layers for What branch (CLS)
+  depth_where: 4  # Mamba layers for Where branch (Patches)
+  contrastive_dim: 256
+  # Stage 2 (Mamba)
+  embed_dim_2: 384
+  depth_2: 6
+  num_global_queries: 128
+  dropout: 0.4
+
+training:
+  batch_size: 32  # Reduced due to larger input (CLS + patches)
+  lr: 3.0e-5      # Reduced for stability with Mamba
+  weight_decay: 0.01  # Reduced to prevent gradient issues
+  max_epochs: 100
+  precision: "fp16"
+  save_dir: "checkpoints/hierarchical_v3_subj01_10"
+  stage: 1
+  stage_1_epochs: 100
+  viz_interval: 5
+  grad_clip: 0.5   # Gradient clipping
+  # LR Scheduler
+  use_scheduler: true
+  warmup_epochs: 15  # Longer warmup for Mamba stability
+  scheduler_type: "cosine"
+  # Early Stopping
+  early_stopping: true
+  patience: 20
+
+loss:
+  alpha: 2.0
+  tau: 0.2
+  pearson_weight: 0.3
+  contrastive_weight: 0.2  # Reduced - InfoNCE can cause gradient explosion
+  std_weight: 0.2
+  peak_alpha: 0.5
+  peak_tau: 0.3
+
+data:
+  subject: 1
+  # HUWNG dataset path (contains both fMRI and DINOv2 features)
+  huwng_base_path: "dataset/huwng"
+  # Embeddings will auto-load from HUWNG folder
+  dinov2_layer: -1  # Which layer to use: 0-3, or -1 for last layer
+  roi_top_k_percent: 0.7
+  average_trials_train: false
+  average_trials_val: true
+  augment_noise_train: true
+  noise_std: 0.1
