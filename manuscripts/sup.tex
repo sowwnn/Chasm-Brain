@@ -216,7 +216,63 @@ Importantly, \textbf{all subjects exceed the MindSimulator baseline} (Pearson: 0
 confirming that CHASM-Brain's improvements are robust and not driven by a single high-performing subject.
 
 
+\subsection{Reproducibility: Code and Data}
+\label{sec:supp_reproducibility}
 
+To facilitate reproducibility, we release our complete codebase including
+data preprocessing, model architecture, and training scripts.
+
+\textbf{Code Availability.}
+Our code is publicly available at: \url{https://github.com/anonymous/ChasmBrain}
+(will be de-anonymized upon acceptance).
+
+\textbf{Data Preprocessing Pipeline.}
+We provide end-to-end scripts to reproduce our data pipeline from raw NSD data:
+\begin{enumerate}
+    \item \texttt{download\_nsddata.py}: Downloads NSD data from AWS S3 (no authentication required),
+          including fMRI betas for subjects 1, 2, 5, 7 and stimulus images.
+    \item \texttt{prepare\_nsddata\_scale.py}: Processes fMRI betas with z-score normalization,
+          applies visual cortex ROI masks, and splits into train/test sets.
+    \item \texttt{save\_images.py}: Extracts PNG images from HDF5 stimulus files.
+    \item \texttt{extract\_features\_dinov2\_multilayer.py}: Extracts DINOv2 ViT-B/14 features
+          from layers [3, 6, 9, 12], producing tensors of shape $(N, 4, 257, 768)$.
+\end{enumerate}
+
+\textbf{Training Commands.}
+After preprocessing, training can be launched with:
+\begin{verbatim}
+# Stage 1: Dual-Stream Mamba for ROI prediction
+python scripts/train_hierarchical_v3.py \
+    --config configs/train_hierarchical_v3_nsd.yaml \
+    --stage 1
+
+# Stage 2: Mamba-VAE for voxel prediction
+python scripts/train_hierarchical_v3.py \
+    --config configs/train_hierarchical_v3_nsd.yaml \
+    --stage 2 \
+    --load_stage1 checkpoints/best_stage1.pth
+\end{verbatim}
+
+\textbf{Training Configuration.}
+Key hyperparameters in \texttt{configs/train\_hierarchical\_v3\_nsd.yaml}:
+\begin{itemize}
+    \item \textbf{Stage 1} (150 epochs): batch size 32, learning rate $3 \times 10^{-5}$,
+          peak-focused loss with $\gamma = 0.3$, InfoNCE weight $\lambda = 0.1$.
+    \item \textbf{Stage 2} (150 epochs): batch size 16, learning rate $10^{-4}$,
+          KL weight $\beta = 0.001$, Stage 1 weights frozen.
+    \item ROI clustering: $K = 30$ voxels per cluster (524 ROIs total).
+\end{itemize}
+
+\textbf{Hardware Requirements.}
+All experiments were conducted on a single NVIDIA RTX 4090 GPU (24GB VRAM).
+Training takes approximately 8 hours for Stage 1 and 12 hours for Stage 2 per subject.
+Total training time for all 4 subjects: $\sim$80 GPU hours.
+
+\textbf{Dependencies.}
+Key dependencies include PyTorch $\geq$ 2.0 with CUDA 12.1,
+\texttt{mamba-ssm} $\geq$ 1.2.0 for selective state-space models,
+and standard neuroimaging libraries (\texttt{nibabel}, \texttt{h5py}, \texttt{scipy}).
+A complete \texttt{requirements.txt} is provided in the repository.
 
 
 
