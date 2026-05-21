@@ -1,6 +1,29 @@
+# Core Deep Learning
 torch>=2.0.0
-numpy
-tqdm
-pyyaml
-tensorboard
-mamba-ssm
+torchvision>=0.15.0
+
+# Mamba SSM (State Space Model)
+mamba-ssm>=1.2.0
+causal-conv1d>=1.2.0
+
+# Computer Vision & Image Processing
+Pillow>=9.5.0
+h5py>=3.8.0
+
+# Scientific Computing & Neuroimaging
+numpy>=1.24.0
+scipy>=1.10.0
+nibabel>=5.0.0
+
+# Utilities
+tqdm>=4.65.0
+
+# Configuration & Logging
+PyYAML>=6.0
+tensorboard>=2.10.0
+
+# Visualization
+matplotlib>=3.7.0
+
+# AWS CLI for NSD data download
+awscli>=1.29.0

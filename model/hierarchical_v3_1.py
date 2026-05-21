@@ -380,7 +380,7 @@ class MambaStage2(nn.Module):
         return pred_voxels, kl_loss
 
 
-class HierarchicalARM_V3(nn.Module):
+class CHASMBrain(nn.Module):
     """
     Hierarchical ARM V3: Dual-Stream Mamba Architecture with VAE
 
@@ -472,7 +472,8 @@ class HierarchicalARM_V3(nn.Module):
         return self.stage1.get_fusion_weights(cls_token, patch_tokens)
 
 
-HierarchicalARM = HierarchicalARM_V3
+HierarchicalARM = CHASMBrain
+HierarchicalARM_V3 = CHASMBrain
 
 
 if __name__ == "__main__":
@@ -481,7 +482,7 @@ if __name__ == "__main__":
     print(f"Testing on: {device}")
 
     B = 4
-    model = HierarchicalARM_V3(
+    model = CHASMBrain(
         cls_dim=768,
         patch_dim=768,
         num_patches=256,

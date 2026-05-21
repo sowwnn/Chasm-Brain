@@ -17,7 +17,7 @@ import torch.nn.functional as F
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from model.hierarchical_v3_1 import HierarchicalARM_V3
+from model.hierarchical_v3_1 import CHASMBrain
 from model.contrastive_loss import InfoNCELoss
 from model.loss import PeakFocusedLoss
 from data.dataset_v7_h import create_dataloaders_v7h
@@ -285,9 +285,9 @@ def main():
 
     print(f"Training HierarchicalARM V3 on device: {device}")
 
-    # Load Data with HUWNG dataset format
+    # Load Data with NSD dataset format
     train_loader, val_loader = create_dataloaders_v7h(
-        huwng_base_path=config['data']['huwng_base_path'],
+        nsd_base_path=config['data']['nsd_base_path'],
         train_embeddings_path=config['data'].get('train_embeddings_path'),  # Optional
         test_embeddings_path=config['data'].get('test_embeddings_path'),    # Optional
         subjects=[config['data']['subject']],
@@ -305,7 +305,7 @@ def main():
     )
 
     # Initialize Model
-    model = HierarchicalARM_V3(
+    model = CHASMBrain(
         cls_dim=config['model']['cls_dim'],
         patch_dim=config['model']['patch_dim'],
         num_patches=config['model']['num_patches'],

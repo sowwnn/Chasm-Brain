@@ -1,15 +1,15 @@
 """
-NeuroFlux Dataset V7-H: Dataset loader for HUWNG data format
+NeuroFlux Dataset V7-H: Dataset loader for NSD data format
 
-This is a drop-in replacement for dataset_v7 that works with the HUWNG dataset structure.
-Key differences from V7:
-1. Loads fMRI data from .npy files instead of HDF5
+Dataset loader for Natural Scenes Dataset (NSD) with multi-trial fMRI data.
+Key features:
+1. Loads fMRI data from .npy files
 2. No datalist JSON required - uses simple image indexing
-3. Compatible with existing embedding and training pipeline
+3. Compatible with DINOv2 embedding and training pipeline
 
-HUWNG Dataset structure:
-- dataset/huwng/subjXX/nsd_train_fmri_zscore_subX.npy: shape (N_train, 3, 15724)
-- dataset/huwng/subjXX/nsd_test_fmri_zscore_subX.npy: shape (N_test, 3, 15724)
+NSD Dataset structure:
+- dataset/nsd/subjXX/nsd_train_fmri_zscore_subX.npy: shape (N_train, 3, 15724)
+- dataset/nsd/subjXX/nsd_test_fmri_zscore_subX.npy: shape (N_test, 3, 15724)
 - Where: N is number of images, 3 is number of trials, 15724 is number of voxels
 
 Returns:
@@ -30,7 +30,7 @@ from typing import Dict, List, Optional
 class NeuroFluxDatasetV7H(Dataset):
     """
     Dataset for HierarchicalARM V3 with DINOv2 CLS + Patches.
-    Works with HUWNG dataset format (.npy files).
+    Works with NSD dataset format (.npy files).
 
     Returns:
         - fmri: [fmri_dim] full voxels
@@ -207,31 +207,10 @@ class SubjectSampler(Sampler):
         return (len(self.dataset) + self.batch_size - 1) // self.batch_size
 
 
-class NeuroFluxConcatDataset(ConcatDataset):
-    """
-    Custom ConcatDataset that exposes subject_ids for SubjectSampler.
-    
-    This class allows combining multiple datasets (e.g., train + val) while maintaining
-    compatibility with SubjectSampler. The subject_ids from all constituent datasets
-    are concatenated to enable subject-aware batch sampling.
-    
-    Usage:
-        train_ds = load_neuroflux_data_v7h(..., split='train')
-        val_ds = load_neuroflux_data_v7h(..., split='test')
-        combined_ds = NeuroFluxConcatDataset([train_ds, val_ds])
-        # Now combined_ds can be used with SubjectSampler
-    """
-    def __init__(self, datasets):
-        super().__init__(datasets)
-        # Concatenate subject_ids from all datasets for SubjectSampler compatibility
-        self.subject_ids = np.concatenate([ds.subject_ids for ds in datasets])
-        print(f"NeuroFluxConcatDataset: Combined {len(datasets)} datasets, "
-              f"total {len(self)} samples, {len(np.unique(self.subject_ids))} subjects")
-
 
 def load_neuroflux_data_v7h(
-    huwng_base_path: str,
-    embeddings_path: Optional[str] = None,  # Optional - will auto-load from huwng if None
+    nsd_base_path: str,
+    embeddings_path: Optional[str] = None,  # Optional - will auto-load from NSD folder if None
     subjects: List[int] = [1],
     split: str = 'train',
     average_trials: bool = False,
@@ -239,39 +218,39 @@ def load_neuroflux_data_v7h(
     roi_top_k_percent: float = 0.7,
     augment_noise: bool = False,
     noise_std: float = 0.1,
-    image_ids_path: Optional[str] = None,  # Deprecated - HUWNG embeddings are pre-aligned
+    image_ids_path: Optional[str] = None,  # Deprecated - embeddings are pre-aligned
     use_float16: bool = False,
     dinov2_layer: int = -1,  # Which layer to use from multilayer features (-1 = last)
 ) -> NeuroFluxDatasetV7H:
     """
-    Load data from HUWNG dataset format for HierarchicalARM V3.
+    Load data from NSD dataset format for HierarchicalARM V3.
 
     Args:
-        huwng_base_path: Path to huwng dataset base (e.g., "dataset/huwng")
-        embeddings_path: Path to embeddings .npy. If None, auto-loads from HUWNG folder
-        subjects: List of subject IDs (1, 2, 5, 7 for HUWNG dataset)
+        nsd_base_path: Path to NSD dataset base (e.g., "dataset/nsd")
+        embeddings_path: Path to embeddings .npy. If None, auto-loads from NSD folder
+        subjects: List of subject IDs (1, 2, 5, 7 for NSD dataset)
         split: 'train' or 'test'
-        average_trials: Average trials per image (HUWNG has 3 trials per image)
+        average_trials: Average trials per image (NSD has 3 trials per image)
         voxels_per_cluster: Voxels per ROI
         roi_top_k_percent: Top-k% for ROI aggregation
         augment_noise: Add noise during training
         noise_std: Noise std
-        image_ids_path: Deprecated - HUWNG embeddings are already aligned with fMRI
+        image_ids_path: Deprecated - embeddings are already aligned with fMRI
         use_float16: Use float16 for memory efficiency
         dinov2_layer: Which DINOv2 layer to use (0-3, or -1 for last layer)
 
     Returns:
         NeuroFluxDatasetV7H
     """
-    huwng_path = Path(huwng_base_path)
-    
+    nsd_path = Path(nsd_base_path)
+
     # Auto-detect embeddings path if not provided
     if embeddings_path is None:
-        # Use built-in HUWNG embeddings
+        # Use built-in NSD embeddings
         if subjects and len(subjects) > 0:
             subj = subjects[0]
             subj_str = f"sub{subj}"
-            embeddings_path = str(huwng_path / f"subj0{subj}" / f"nsd_dinov2_vitb14_multilayer_{split}_{subj_str}.npy")
+            embeddings_path = str(nsd_path / f"subj0{subj}" / f"nsd_dinov2_vitb14_multilayer_{split}_{subj_str}.npy")
             print(f"Auto-detected embeddings path: {embeddings_path}")
     
     print(f"Loading {split} embeddings from {embeddings_path}...")
@@ -290,23 +269,23 @@ def load_neuroflux_data_v7h(
     
     # Deprecated warning for image_ids_path
     if image_ids_path is not None:
-        print(f"  WARNING: image_ids_path is deprecated for HUWNG dataset.")
-        print(f"  HUWNG embeddings are pre-aligned with fMRI. Ignoring image_ids_path.")
+        print(f"  WARNING: image_ids_path is deprecated.")
+        print(f"  Embeddings are pre-aligned with fMRI. Ignoring image_ids_path.")
 
     fmri_data = {}
     image_ids = {}
 
     for subj in subjects:
         print(f"\nProcessing Subject {subj} for {split} split...")
-        
-        # Construct file path for HUWNG dataset
-        # Format: dataset/huwng/subjXX/nsd_{split}_fmri_zscore_subX.npy
+
+        # Construct file path for NSD dataset
+        # Format: dataset/nsd/subjXX/nsd_{split}_fmri_zscore_subX.npy
         if subj < 10:
             subj_str = f"sub{subj}"
         else:
             subj_str = f"sub{subj}"
-        
-        fmri_file = huwng_path / f"subj0{subj}" / f"nsd_{split}_fmri_zscore_{subj_str}.npy"
+
+        fmri_file = nsd_path / f"subj0{subj}" / f"nsd_{split}_fmri_zscore_{subj_str}.npy"
         
         if not fmri_file.exists():
             print(f"Warning: File {fmri_file} not found, skipping subject {subj}")
@@ -357,9 +336,9 @@ def load_neuroflux_data_v7h(
 
 
 def create_dataloaders_v7h(
-    huwng_base_path: str,
-    train_embeddings_path: Optional[str] = None,  # Optional - auto-loads from huwng
-    test_embeddings_path: Optional[str] = None,   # Optional - auto-loads from huwng
+    nsd_base_path: str,
+    train_embeddings_path: Optional[str] = None,  # Optional - auto-loads from NSD
+    test_embeddings_path: Optional[str] = None,   # Optional - auto-loads from NSD
     subjects: List[int] = [1],
     batch_size: int = 32,
     voxels_per_cluster: int = 30,
@@ -376,18 +355,16 @@ def create_dataloaders_v7h(
     dinov2_layer: int = -1,  # Which DINOv2 layer to use
 ):
     """
-    Create train and validation dataloaders for V3 model using HUWNG dataset.
-    
-    This is a drop-in replacement for create_dataloaders_v7 that works with HUWNG data.
-    
+    Create train and validation dataloaders for V3 model using NSD dataset.
+
     Args:
-        huwng_base_path: Path to HUWNG dataset (e.g., "dataset/huwng")
+        nsd_base_path: Path to NSD dataset (e.g., "dataset/nsd")
         train_embeddings_path: Optional path to train embeddings (auto-loads if None)
         test_embeddings_path: Optional path to test embeddings (auto-loads if None)
         dinov2_layer: Which layer to use from multilayer features (-1 = last)
     """
     train_dataset = load_neuroflux_data_v7h(
-        huwng_base_path=huwng_base_path,
+        nsd_base_path=nsd_base_path,
         embeddings_path=train_embeddings_path,
         subjects=subjects,
         split='train',
@@ -402,7 +379,7 @@ def create_dataloaders_v7h(
     )
 
     val_dataset = load_neuroflux_data_v7h(
-        huwng_base_path=huwng_base_path,
+        nsd_base_path=nsd_base_path,
         embeddings_path=test_embeddings_path,
         subjects=subjects,
         split='test',
@@ -416,7 +393,6 @@ def create_dataloaders_v7h(
         dinov2_layer=dinov2_layer,
     )
     
-    # train_dataset = NeuroFluxConcatDataset([train_dataset, val_dataset])
     train_sampler = SubjectSampler(train_dataset, batch_size=batch_size, drop_last=True)
 
     train_loader = DataLoader(
@@ -442,9 +418,9 @@ def create_dataloaders_v7h(
 
 
 if __name__ == '__main__':
-    # Test with HUWNG dataset
+    # Test with NSD dataset
     print("=" * 60)
-    print("Testing NeuroFluxDatasetV7H with HUWNG dataset")
+    print("Testing NeuroFluxDatasetV7H with NSD dataset")
     print("=" * 60)
 
     # Test with dummy data first
@@ -475,22 +451,22 @@ if __name__ == '__main__':
     print(f"  patch_tokens: {sample['patch_tokens'].shape}")
     print(f"  roi_means: {sample['roi_means'].shape}")
 
-    print("\n✓ Dataset test passed!")
-    
-    # Test with real HUWNG data if available
-    huwng_path = Path("dataset/huwng")
-    if huwng_path.exists():
+    print("\nDataset test passed!")
+
+    # Test with real NSD data if available
+    nsd_path = Path("dataset/nsd")
+    if nsd_path.exists():
         print("\n" + "=" * 60)
-        print("Testing with real HUWNG data")
+        print("Testing with real NSD data")
         print("=" * 60)
-        
+
         try:
             # Test loading without embeddings (just structure test)
-            test_file = huwng_path / "subj01" / "nsd_test_fmri_zscore_sub1.npy"
+            test_file = nsd_path / "subj01" / "nsd_test_fmri_zscore_sub1.npy"
             if test_file.exists():
                 data = np.load(test_file)
                 print(f"Loaded {test_file.name}: {data.shape}")
                 print(f"Expected format: (N_images, 3_trials, 15724_voxels)")
-                print("✓ HUWNG data structure verified!")
+                print("NSD data structure verified!")
         except Exception as e:
-            print(f"Error testing HUWNG data: {e}")
+            print(f"Error testing NSD data: {e}")
