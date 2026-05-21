@@ -1,6 +1,83 @@
-# ChasmBrain: Dual-Stream Mamba for fMRI Prediction
+# CHASMBrain: Coarse-to-fine Hierarchical Architecture with Sequential Mamba for Brain Reconstruction
 
-Image-to-fMRI prediction using Dual-Stream Mamba architecture with DINOv2 visual features.
+Official implementation of **CHASMBrain**, a dual-stream, coarse-to-fine encoding model that predicts fMRI responses to natural images. The model mirrors the brain's dual visual pathways — a **Where-stream** that processes spatial patch tokens (retinotopic, early visual cortex) and a **What-stream** that processes the CLS token (semantic, higher visual cortex) — both implemented with selective state-space (Mamba) blocks. A two-stage hierarchy first predicts ROI-level activity, then refines to voxel-level reconstruction.
+
+![Architecture Overview](static/overviewarch.png)
+
+## Key Contributions
+
+- **Dual-Stream Mamba backbone** that explicitly disentangles *where* (spatial/patch) and *what* (semantic/CLS) information, matching the brain's ventral/dorsal organisation.
+- **Coarse-to-fine two-stage decoding**: Stage 1 predicts ROI activity, Stage 2 amplifies it to per-voxel responses, with a principled top-p% gating threshold to suppress noise before voxel decoding.
+- **Efficient design**: 26% fewer parameters and 2× lower FLOPs than a Transformer baseline of comparable capacity, while delivering higher predictive accuracy.
+
+---
+
+## Results
+
+All numbers are mean over 4 NSD subjects (1, 2, 5, 7), voxel-level Pearson / MSE unless stated otherwise.
+
+### Comparison with Baselines (same DINOv2 features)
+
+| Method | Pearson ↑ | MSE ↓ |
+|---|---|---|
+| Ridge (best α) | 0.368 | 0.371 |
+| MLP | 0.231 | 0.533 |
+| GRU | 0.237 | 0.461 |
+| LSTM | 0.232 | 0.468 |
+| DINOv2 Layer 12 linear probe | 0.407 | 0.357 |
+| **CHASMBrain (ours)** | **0.429** | **0.261** |
+
+At the same feature source (DINOv2 Layer 12), CHASMBrain delivers a clear MSE reduction — the model predicts accurate voxel *values*, not just correct trends.
+
+### Cross-Subject Transfer
+
+Backbone trained on source subjects, frozen, then a lightweight per-subject head is adapted to a held-out target subject.
+
+| Source → Target | Pearson ↑ | MSE ↓ |
+|---|---|---|
+| subj01 → subj07 | 0.436 | 0.294 |
+| subj01,02 → subj05 | 0.457 | 0.260 |
+| subj01,02 → subj07 | 0.448 | 0.269 |
+| subj01,02,05 → subj07 | 0.448 | 0.271 |
+| subj07 within-subject (upper bound) | 0.451 | 0.239 |
+
+The frozen backbone reaches near within-subject performance on unseen subjects, indicating it learns a **subject-agnostic visual representation**; only the small head handles each subject's voxel layout.
+
+---
+
+## Analysis
+
+![Analysis](static/analysis.png)
+
+### Causal Branch Ablation (Stage 1 ROI Pearson)
+
+All four variants share the same architecture and parameter count — only the input routing changes at inference.
+
+| Variant | Early | Mid | Higher | Overall |
+|---|---|---|---|---|
+| **Both streams (full)** | **0.512** | **0.589** | **0.625** | **0.585** |
+| Where only | 0.425 | 0.461 | 0.501 | 0.467 |
+| Swap (where↔what) | 0.279 | 0.326 | 0.472 | 0.381 |
+| What only | 0.273 | 0.313 | 0.446 | 0.364 |
+
+Two clear findings:
+1. **The Where-stream is causally locked to early visual cortex.** Removing it hurts Early regions far more than Higher regions — consistent with retinotopy.
+2. **Routing matters causally.** Under Swap (same weights, swapped inputs), Early Pearson collapses while Higher barely changes (1.9× asymmetry) — the two streams are *not* interchangeable, they are specialised.
+
+### Design Choices
+
+- **Top-p% threshold (p=70%).** At p=90%, Stage 1 ROI Pearson is essentially unchanged (0.586 vs. 0.585), but Stage 2 voxel-level MSE degrades by 46% (0.381 vs. 0.261). Noise invisible to the symmetric Stage 1 task is amplified by Stage 2's one-to-many voxel decoding; p=70% is the largest threshold before this amplification appears.
+- **Mamba vs. capacity.** CHASMBrain uses 14.6M params (vs. 19.8M for a Transformer baseline) and 2× lower FLOPs, yet achieves 0.585 Stage 1 ROI Pearson vs. 0.452. The gain comes from the selective state-space design and dual-stream routing, not from added capacity.
+
+---
+
+## Qualitative Results
+
+![Qualitative Reconstructions](static/qualitative.png)
+
+Reconstructed voxel activity maps closely track the ground-truth fMRI responses across early, mid, and higher visual regions. The Where-stream sharply recovers retinotopic patterns in early cortex, while the What-stream contributes the broader semantic structure visible in higher regions.
+
+---
 
 ## Project Structure
 
@@ -259,8 +336,9 @@ Image → DINOv2 → [CLS, Patches]
 
 If you use this code, please cite:
 ```bibtex
-@misc{chasmbrain2024,
-  title={ChasmBrain: Dual-Stream Mamba for fMRI Prediction},
-  year={2024}
+@inproceedings{chasmbrain2026,
+  title={CHASMBrain: Coarse-to-fine Hierarchical Architecture with Sequential Mamba for Brain Reconstruction},
+  booktitle={ECCV},
+  year={2026}
 }
 ```
