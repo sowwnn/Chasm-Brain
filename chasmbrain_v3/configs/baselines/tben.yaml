@@ -1,0 +1,2 @@
+# Reuse legacy/configs/train_tben_*_subj*.yaml; only the split changes (adds val).
+legacy_config: legacy/configs/train_tben_two_stage_subj1.yaml

@@ -1,0 +1,10 @@
+# spec §5–§6
+d_hidden: 512
+t_embed_dim: 64
+n_steps: 4
+schedule: log            # linear | log
+band_weighting: uniform  # uniform | spectral
+gamma_pearson: 0.3
+teacher_noise_sigma: 0.05
+scheduled_sampling: {start_epoch: 50, p_max: 0.5}
+optim: {lr: 3.0e-4, batch_size: 64, max_epochs: 150, patience: 15}

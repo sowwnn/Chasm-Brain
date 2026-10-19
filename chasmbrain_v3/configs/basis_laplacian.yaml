@@ -1,0 +1,5 @@
+# spec §4 basis/laplacian.py
+K: 2000
+connectivity: 26
+normalized: true
+component_policy: per_component   # per_component | bridge

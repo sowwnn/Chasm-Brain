@@ -1,0 +1,4 @@
+# spec §4 basis/cluster_tree.py
+linkage: ward
+spatial_weight: 0.0
+levels: [300, 1000, 5000, 15000]

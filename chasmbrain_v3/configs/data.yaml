@@ -1,0 +1,6 @@
+# NSD paths, subjects, split (spec §3)
+nsd_root: dataset/
+subjects: [1, 2, 5, 7]
+mask: nsdgeneral
+split_seed: 0
+n_val: 1000

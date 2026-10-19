@@ -69,3 +69,11 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+# PROJECT: CHASMBrain v3
+
+- Reference spec: `docs/CHASMBrain_v3_spec.md`. Follow it; if the code must deviate, update the spec in the same commit.
+- Code lives in `chasmbrain_v3/`. Old WACV code is frozen in `legacy/` (tag `wacv-round2-final`), read-only except for `baselines/tben.py` reuse.
+- Experiments run in order E0 -> E1 -> E2 (gates) -> E3 -> E4..E8. A failed gate means stop and report, not continue.
+- All statistics on the 9,000 train images only; val = 1,000 held out from train; shared-1000 is test and never used for selection.
+- Python: `.venv/bin/python` (venv over system torch 2.7). Tests: `.venv/bin/python -m pytest chasmbrain_v3/tests`.
