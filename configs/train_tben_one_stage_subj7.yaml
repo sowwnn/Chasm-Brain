@@ -1,0 +1,55 @@
+# Variant A: TBEn readout, one stage, no coarse-to-fine refinement.
+# Protocol (split, voxel mask, z-score, epochs, optimizer, loss, eval) is
+# identical to configs/train_direct_stage2_transformer_subj7.yaml.
+
+model:
+  name: "TBEnOneStage"
+  description: "TBEn decoder (authors' code, vendored in third_party/transformer_brain_encoder) reading out our voxel clusters in a single stage; not a reproduction of the published numbers"
+  cls_dim: 768
+  patch_dim: 768
+  num_patches: 256
+  fmri_dim: 14278
+  voxels_per_cluster: 30
+  # Authors' defaults from their main.py get_args_parser.
+  hidden_dim: 768
+  nheads: 16
+  dim_feedforward: 1024
+  enc_layers: 0
+  dec_layers: 1
+  pre_norm: true
+  enc_output_layer: 1
+  dropout: 0.1
+
+training:
+  batch_size: 32
+  lr: 3.0e-5
+  weight_decay: 0.01
+  max_epochs: 450
+  patience: 10
+  precision: "fp32"
+  amp_init_scale: 1024.0
+  grad_clip: 1.0
+  max_nonfinite_steps_per_epoch: 5
+  save_dir: "checkpoints/wacv_round2/tben_one_stage/subj7_seed42"
+
+loss:
+  pearson_weight: 0.3
+  std_weight: 0.2
+  kl_weight: 0.001
+  stability_eps: 1.0e-6
+
+experiment:
+  seed: 42
+
+data:
+  subject: 7
+  huwng_base_path: "dataset/huwng"
+  train_embeddings_path: "dataset/huwng/subj07/nsd_dinov2_vitb14_multilayer_train_sub7.npy"
+  test_embeddings_path: "dataset/huwng/subj07/nsd_dinov2_vitb14_multilayer_test_sub7.npy"
+  dinov2_layer: -1
+  roi_top_k_percent: 0.7
+  average_trials_train: false
+  average_trials_val: true
+  augment_noise_train: true
+  noise_std: 0.1
+  num_workers: 8

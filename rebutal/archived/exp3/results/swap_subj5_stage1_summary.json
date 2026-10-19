@@ -1,0 +1,19 @@
+{
+  "tag": "swap_subj5",
+  "config": "rebutal/exp3/configs/exp3_swap_subj5.yaml",
+  "stage": 1,
+  "branch_mode": "swap",
+  "train_subjects": [
+    5
+  ],
+  "best_epoch": 5,
+  "best_val_pearson_mean": 0.5887,
+  "best_val_mse_mean": 0.114,
+  "best_val_per_subject": {
+    "5": {
+      "pearson": 0.589
+    }
+  },
+  "checkpoint": "rebutal/exp3/checkpoints/swap_subj5/best_stage1.pth",
+  "source": "backfilled_from_log"
+}

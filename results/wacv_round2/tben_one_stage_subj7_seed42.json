@@ -1,0 +1,700 @@
+{
+  "status": "complete",
+  "experiment": "TBEnOneStage",
+  "description": "TBEn decoder (authors' code, vendored in third_party/transformer_brain_encoder) reading out our voxel clusters in a single stage; not a reproduction of the published numbers",
+  "subject": 7,
+  "seed": 42,
+  "vae_mode": "stochastic",
+  "parameters": 17700102,
+  "max_epochs": 450,
+  "patience": 20,
+  "history": [
+    {
+      "epoch": 1,
+      "train": {
+        "loss": 1.3692051365989242,
+        "mse": 1.030163105343019,
+        "std": 0.39491956577606474,
+        "pearson": 0.1331402205959877,
+        "grad_norm": 0.1658307140337332,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.3248499035835266,
+        "pearson_std": 0.13718444108963013,
+        "mse": 0.39752861857414246,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 2,
+      "train": {
+        "loss": 1.290096539195322,
+        "mse": 0.9807871173567903,
+        "std": 0.3620868803201904,
+        "pearson": 0.21036073706893876,
+        "grad_norm": 0.1693382104273227,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.3627825677394867,
+        "pearson_std": 0.12829606235027313,
+        "mse": 0.38731181621551514,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 3,
+      "train": {
+        "loss": 1.265598834904346,
+        "mse": 0.9667458811405856,
+        "std": 0.3467696955690463,
+        "pearson": 0.2350042274802888,
+        "grad_norm": 0.17824840345911566,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.3926132321357727,
+        "pearson_std": 0.12102587521076202,
+        "mse": 0.3789287805557251,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 4,
+      "train": {
+        "loss": 1.2462204219607695,
+        "mse": 0.955788400249549,
+        "std": 0.3330374293267939,
+        "pearson": 0.2539191777206966,
+        "grad_norm": 0.19297883674626107,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4103306531906128,
+        "pearson_std": 0.11684351414442062,
+        "mse": 0.37326398491859436,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 5,
+      "train": {
+        "loss": 1.232788006040408,
+        "mse": 0.9478689888193939,
+        "std": 0.3244025000190961,
+        "pearson": 0.2665392638737621,
+        "grad_norm": 0.20540194756054228,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4235557019710541,
+        "pearson_std": 0.11406774818897247,
+        "mse": 0.36701059341430664,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 6,
+      "train": {
+        "loss": 1.2218776319091995,
+        "mse": 0.9412115865330679,
+        "std": 0.3180673663125485,
+        "pearson": 0.2764924181136938,
+        "grad_norm": 0.2156865558236802,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4330041706562042,
+        "pearson_std": 0.11429232358932495,
+        "mse": 0.3649923801422119,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 7,
+      "train": {
+        "loss": 1.212897745174304,
+        "mse": 0.9357191889877138,
+        "std": 0.3128394310938223,
+        "pearson": 0.2846321078240518,
+        "grad_norm": 0.22403025494563622,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.44076788425445557,
+        "pearson_std": 0.11242999136447906,
+        "mse": 0.36410772800445557,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 8,
+      "train": {
+        "loss": 1.2056715666611424,
+        "mse": 0.9310755073529263,
+        "std": 0.309436480646173,
+        "pearson": 0.29097180172783343,
+        "grad_norm": 0.23009535832902855,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4449666738510132,
+        "pearson_std": 0.11145540326833725,
+        "mse": 0.363120436668396,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 9,
+      "train": {
+        "loss": 1.199702977002869,
+        "mse": 0.927143341988714,
+        "std": 0.30708984060219596,
+        "pearson": 0.2961954707600185,
+        "grad_norm": 0.23744083953356263,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.44834375381469727,
+        "pearson_std": 0.1108318641781807,
+        "mse": 0.3613891005516052,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 10,
+      "train": {
+        "loss": 1.1944635526706882,
+        "mse": 0.9235936652864567,
+        "std": 0.30553135537450704,
+        "pearson": 0.30078898923535646,
+        "grad_norm": 0.24424320862386575,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.45132550597190857,
+        "pearson_std": 0.11073456704616547,
+        "mse": 0.36149680614471436,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 11,
+      "train": {
+        "loss": 1.189590328245966,
+        "mse": 0.9202861611953409,
+        "std": 0.30377852453597215,
+        "pearson": 0.3048395029272473,
+        "grad_norm": 0.2543490204169091,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4536582827568054,
+        "pearson_std": 0.11041276901960373,
+        "mse": 0.3606272041797638,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 12,
+      "train": {
+        "loss": 1.1850688910003517,
+        "mse": 0.9171986591914936,
+        "std": 0.30233602215174676,
+        "pearson": 0.30865762814932446,
+        "grad_norm": 0.26128934440451584,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.45520395040512085,
+        "pearson_std": 0.10997071117162704,
+        "mse": 0.35893723368644714,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 13,
+      "train": {
+        "loss": 1.1810271976115723,
+        "mse": 0.9143290324567476,
+        "std": 0.3015706820915037,
+        "pearson": 0.3120543000466176,
+        "grad_norm": 0.27055658681112676,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.45692676305770874,
+        "pearson_std": 0.10986430943012238,
+        "mse": 0.36104848980903625,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 14,
+      "train": {
+        "loss": 1.176931541726824,
+        "mse": 0.9115835380158249,
+        "std": 0.2997587444271764,
+        "pearson": 0.31534689074450684,
+        "grad_norm": 0.281136380024652,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4580199122428894,
+        "pearson_std": 0.1105160266160965,
+        "mse": 0.3602568507194519,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 15,
+      "train": {
+        "loss": 1.17308320835109,
+        "mse": 0.9088436541891042,
+        "std": 0.29883673946204137,
+        "pearson": 0.31842704879148714,
+        "grad_norm": 0.2917255386445022,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4589794874191284,
+        "pearson_std": 0.11007676273584366,
+        "mse": 0.35972076654434204,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 16,
+      "train": {
+        "loss": 1.1693700714609094,
+        "mse": 0.9062742399999679,
+        "std": 0.29742320383924326,
+        "pearson": 0.321297120121733,
+        "grad_norm": 0.3062494540165045,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4592910706996918,
+        "pearson_std": 0.1104777529835701,
+        "mse": 0.35921624302864075,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 17,
+      "train": {
+        "loss": 1.165836788864181,
+        "mse": 0.9037981379074558,
+        "std": 0.2961787172943389,
+        "pearson": 0.32399138497146707,
+        "grad_norm": 0.3199267023257372,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.46081843972206116,
+        "pearson_std": 0.10913079977035522,
+        "mse": 0.3591008186340332,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 18,
+      "train": {
+        "loss": 1.162633846804482,
+        "mse": 0.90154985466603,
+        "std": 0.2951871427494153,
+        "pearson": 0.3265125440038113,
+        "grad_norm": 0.334820849615484,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4604308605194092,
+        "pearson_std": 0.10933620482683182,
+        "mse": 0.3606998920440674,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 19,
+      "train": {
+        "loss": 1.1593038921254386,
+        "mse": 0.8992801754782915,
+        "std": 0.2936733803432324,
+        "pearson": 0.3290376204683546,
+        "grad_norm": 0.3448270373355734,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.46047335863113403,
+        "pearson_std": 0.10914047807455063,
+        "mse": 0.36130833625793457,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 20,
+      "train": {
+        "loss": 1.1562834181960933,
+        "mse": 0.897128678442886,
+        "std": 0.2926008410371778,
+        "pearson": 0.33121919334995364,
+        "grad_norm": 0.3611564203513475,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.46083593368530273,
+        "pearson_std": 0.10949282348155975,
+        "mse": 0.3626764118671417,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 21,
+      "train": {
+        "loss": 1.1533470347541366,
+        "mse": 0.8951562164375649,
+        "std": 0.2911492370130894,
+        "pearson": 0.33346452637357926,
+        "grad_norm": 0.3754174313016351,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.45889994502067566,
+        "pearson_std": 0.11104977130889893,
+        "mse": 0.3652277886867523,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 22,
+      "train": {
+        "loss": 1.1504335075369367,
+        "mse": 0.8931143141726158,
+        "std": 0.28989422892265615,
+        "pearson": 0.33553327851589604,
+        "grad_norm": 0.38965599056806144,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.46045947074890137,
+        "pearson_std": 0.10886426270008087,
+        "mse": 0.36371251940727234,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 23,
+      "train": {
+        "loss": 1.1476315978300247,
+        "mse": 0.8911530369117167,
+        "std": 0.2888698108043535,
+        "pearson": 0.33765244469806677,
+        "grad_norm": 0.40573345190124016,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.45877835154533386,
+        "pearson_std": 0.11159224808216095,
+        "mse": 0.36804479360580444,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 24,
+      "train": {
+        "loss": 1.1449237900696616,
+        "mse": 0.8893475671821359,
+        "std": 0.2873331170312592,
+        "pearson": 0.33963576959686914,
+        "grad_norm": 0.4129818925371091,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4595991373062134,
+        "pearson_std": 0.11007063090801239,
+        "mse": 0.36569589376449585,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 25,
+      "train": {
+        "loss": 1.1422876051736472,
+        "mse": 0.8874769296368953,
+        "std": 0.2862983559869221,
+        "pearson": 0.34149775128206183,
+        "grad_norm": 0.42563353540775756,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.45952150225639343,
+        "pearson_std": 0.10942987352609634,
+        "mse": 0.36812716722488403,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 26,
+      "train": {
+        "loss": 1.1398390040844502,
+        "mse": 0.8858724572338951,
+        "std": 0.2848197119233164,
+        "pearson": 0.34332576326910996,
+        "grad_norm": 0.43717187706686,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4591491222381592,
+        "pearson_std": 0.11008281260728836,
+        "mse": 0.36704587936401367,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 27,
+      "train": {
+        "loss": 1.1372112168677477,
+        "mse": 0.8839952061184785,
+        "std": 0.2838383562694948,
+        "pearson": 0.3451733087517613,
+        "grad_norm": 0.445712350759642,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4585340619087219,
+        "pearson_std": 0.11137677729129791,
+        "mse": 0.3686397671699524,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 28,
+      "train": {
+        "loss": 1.1351611496856346,
+        "mse": 0.8827027793032419,
+        "std": 0.28250777024956925,
+        "pearson": 0.34681171528809435,
+        "grad_norm": 0.4588526916178661,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4576372802257538,
+        "pearson_std": 0.11131823807954788,
+        "mse": 0.36802083253860474,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 29,
+      "train": {
+        "loss": 1.1328176091715676,
+        "mse": 0.8810739036415254,
+        "std": 0.2814519641874524,
+        "pearson": 0.34849006082522344,
+        "grad_norm": 0.4684543320434091,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4569661617279053,
+        "pearson_std": 0.11074662953615189,
+        "mse": 0.36985984444618225,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 30,
+      "train": {
+        "loss": 1.1304864569490916,
+        "mse": 0.8794764309308424,
+        "std": 0.28027857502442943,
+        "pearson": 0.350153405754026,
+        "grad_norm": 0.4761145779175832,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.45688480138778687,
+        "pearson_std": 0.11153990775346756,
+        "mse": 0.3719122111797333,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 31,
+      "train": {
+        "loss": 1.1282629384123417,
+        "mse": 0.8780555990242873,
+        "std": 0.2787720384617576,
+        "pearson": 0.3518246697927002,
+        "grad_norm": 0.4842822711875006,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4551173746585846,
+        "pearson_std": 0.10999694466590881,
+        "mse": 0.37020790576934814,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 32,
+      "train": {
+        "loss": 1.1261601047159513,
+        "mse": 0.8766163665346121,
+        "std": 0.277786758517314,
+        "pearson": 0.353379821544016,
+        "grad_norm": 0.49570562113363686,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4548743665218353,
+        "pearson_std": 0.1122671514749527,
+        "mse": 0.37291452288627625,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 33,
+      "train": {
+        "loss": 1.1238169059917456,
+        "mse": 0.8749696935481731,
+        "std": 0.276739461283384,
+        "pearson": 0.3550033778977422,
+        "grad_norm": 0.49924630131727155,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4542105793952942,
+        "pearson_std": 0.10945497453212738,
+        "mse": 0.36992353200912476,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 34,
+      "train": {
+        "loss": 1.1219052769252555,
+        "mse": 0.8737212212343092,
+        "std": 0.2756121368948392,
+        "pearson": 0.35646234214093764,
+        "grad_norm": 0.5054616386850816,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4531482458114624,
+        "pearson_std": 0.11184171587228775,
+        "mse": 0.37562817335128784,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 35,
+      "train": {
+        "loss": 1.1197105571185708,
+        "mse": 0.8722277712850243,
+        "std": 0.2743761046819415,
+        "pearson": 0.3579758999257184,
+        "grad_norm": 0.5148847679014308,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.45366111397743225,
+        "pearson_std": 0.11098943650722504,
+        "mse": 0.37359458208084106,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 36,
+      "train": {
+        "loss": 1.1179209837285649,
+        "mse": 0.8710726797934246,
+        "std": 0.27329944052942284,
+        "pearson": 0.3593730450666389,
+        "grad_norm": 0.5204751215795606,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4532994329929352,
+        "pearson_std": 0.11201657354831696,
+        "mse": 0.37443915009498596,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 37,
+      "train": {
+        "loss": 1.1160452160122556,
+        "mse": 0.8697782075419261,
+        "std": 0.2725618931852626,
+        "pearson": 0.36081899934109135,
+        "grad_norm": 0.5261554348228382,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4524516761302948,
+        "pearson_std": 0.11077233403921127,
+        "mse": 0.3774351477622986,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 38,
+      "train": {
+        "loss": 1.1139653639719862,
+        "mse": 0.8684188092165005,
+        "std": 0.27117814767049586,
+        "pearson": 0.3622980207947225,
+        "grad_norm": 0.5328679874557052,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4518420696258545,
+        "pearson_std": 0.11218290776014328,
+        "mse": 0.38013795018196106,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 39,
+      "train": {
+        "loss": 1.1122048736184234,
+        "mse": 0.8673177550978791,
+        "std": 0.26993617231594147,
+        "pearson": 0.36366815905695427,
+        "grad_norm": 0.5374751860631601,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4520381689071655,
+        "pearson_std": 0.11248789727687836,
+        "mse": 0.37606173753738403,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 40,
+      "train": {
+        "loss": 1.1103628977762,
+        "mse": 0.8660183012980441,
+        "std": 0.2692010315004758,
+        "pearson": 0.36498648108536663,
+        "grad_norm": 0.5423462394081401,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.45166608691215515,
+        "pearson_std": 0.1127082109451294,
+        "mse": 0.3782285153865814,
+        "num_samples": 1000
+      }
+    }
+  ],
+  "latest_epoch": 40,
+  "best_epoch": 20,
+  "best_validation_pearson": 0.46083593368530273,
+  "elapsed_seconds": 1725.5048632621765,
+  "stopping_reason": "early_stopping",
+  "completed_epochs": 40,
+  "checkpoint": "checkpoints/wacv_round2/tben_one_stage/subj7_seed42/best_model.pth"
+}

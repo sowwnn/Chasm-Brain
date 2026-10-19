@@ -229,8 +229,14 @@ class MambaStage2(nn.Module):
         depth=6,
         dropout=0.1,
         num_global_queries=128,
+        vae_mode="stochastic",
+        global_hidden=4096,
     ):
         super().__init__()
+
+        valid_vae_modes = {"none", "deterministic", "stochastic"}
+        if vae_mode not in valid_vae_modes:
+            raise ValueError(f"vae_mode must be one of {sorted(valid_vae_modes)}, got {vae_mode!r}")
 
         self.num_rois = num_rois
         self.embed_dim = embed_dim
@@ -238,6 +244,7 @@ class MambaStage2(nn.Module):
         self.fmri_dim = fmri_dim
         self.voxels_per_cluster = voxels_per_cluster
         self.num_global_queries = num_global_queries
+        self.vae_mode = vae_mode
 
         # 1. Tokenizers
         self.vis_tokenizer = nn.Linear(visual_dim, embed_dim)
@@ -269,11 +276,11 @@ class MambaStage2(nn.Module):
             for _ in range(2)
         ])
         self.global_head = nn.Sequential(
-            nn.Linear(num_global_queries * embed_dim, 4096),
-            nn.LayerNorm(4096),
+            nn.Linear(num_global_queries * embed_dim, global_hidden),
+            nn.LayerNorm(global_hidden),
             nn.GELU(),
             nn.Dropout(dropout),
-            nn.Linear(4096, fmri_dim)
+            nn.Linear(global_hidden, fmri_dim)
         )
 
         # 5. Local Branch
@@ -333,19 +340,23 @@ class MambaStage2(nn.Module):
                 x_fp32 = x_fp32 + self.dropout(residual)
             memory = x_fp32.to(x.dtype)
 
-        # VAE: compute latent from pooled memory
-        pooled_memory = memory.mean(dim=1)  # [B, embed_dim]
-        vae_hidden = self.vae_encoder(pooled_memory)
-        mu = self.fc_mu(vae_hidden)
-        logvar = self.fc_logvar(vae_hidden)
-        z = self.reparameterize(mu, logvar)  # [B, latent_dim]
+        # Latent ablations keep the surrounding Stage 2 architecture unchanged.
+        # none: bypass latent path; deterministic: inject mu without sampling/KL;
+        # stochastic: standard VAE reparameterization and KL.
+        kl_loss = memory.new_zeros(())
+        if self.vae_mode != "none":
+            pooled_memory = memory.mean(dim=1)  # [B, embed_dim]
+            vae_hidden = self.vae_encoder(pooled_memory)
+            mu = self.fc_mu(vae_hidden)
 
-        # KL divergence loss: D_KL(q(z|x) || p(z)) where p(z) = N(0, 1)
-        kl_loss = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
+            if self.vae_mode == "deterministic":
+                z = mu
+            else:
+                logvar = self.fc_logvar(vae_hidden)
+                z = self.reparameterize(mu, logvar)
+                kl_loss = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
 
-        # Inject latent into memory
-        z_proj = self.latent_proj(z).unsqueeze(1)  # [B, 1, embed_dim]
-        memory = memory + z_proj  # Broadcast add to all tokens
+            memory = memory + self.latent_proj(z).unsqueeze(1)
 
         # Global Branch - also in fp32
         queries = self.global_queries.expand(B, -1, -1)
@@ -406,6 +417,8 @@ class HierarchicalARM_V3(nn.Module):
         num_global_queries=128,
         dropout=0.1,
         roi_top_k_percent=0.7,
+        vae_mode="stochastic",
+        global_hidden=4096,
     ):
         super().__init__()
 
@@ -438,6 +451,8 @@ class HierarchicalARM_V3(nn.Module):
             depth=depth_2,
             num_global_queries=num_global_queries,
             dropout=dropout,
+            vae_mode=vae_mode,
+            global_hidden=global_hidden,
         )
 
         self.patch_pooler = nn.Sequential(

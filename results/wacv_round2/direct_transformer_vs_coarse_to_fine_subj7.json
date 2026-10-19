@@ -1,0 +1,38 @@
+{
+  "subject": 7,
+  "num_images": 1000,
+  "protocol": "identical NSD split, DINOv2 layer, trial averaging, voxel mask, and metrics",
+  "checkpoints": {
+    "coarse_to_fine": "checkpoints/chasm_rerun_s7/best_model.pth",
+    "direct_one_stage": "checkpoints/wacv_round2/direct_stage2_only/transformer_subj7_seed42/best_model.pth"
+  },
+  "parameters": {
+    "coarse_to_fine": 281983471,
+    "direct_one_stage": 268130307
+  },
+  "coarse_to_fine": {
+    "pearson_mean": 0.4301174283027649,
+    "pearson_95_ci": [
+      0.4223288156092167,
+      0.43805191814899447
+    ],
+    "mse_mean": 0.3780694007873535
+  },
+  "direct_one_stage": {
+    "pearson_mean": 0.36019977927207947,
+    "pearson_95_ci": [
+      0.3509013533592224,
+      0.3694003976881504
+    ],
+    "mse_mean": 0.4011975824832916
+  },
+  "direct_minus_coarse_to_fine": {
+    "mean_delta": -0.06991766393184662,
+    "bootstrap_95_ci": [
+      -0.07595552168786526,
+      -0.06399480402469634
+    ],
+    "paired_permutation_p": 9.999000099990002e-05
+  },
+  "relative_pearson_drop_percent": 16.25547981262207
+}

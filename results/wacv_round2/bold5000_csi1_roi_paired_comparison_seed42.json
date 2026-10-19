@@ -1,0 +1,21 @@
+{
+  "dataset": "BOLD5000",
+  "subject": "CSI1",
+  "num_paired_test_images": 451,
+  "pearson": {
+    "mean_delta_chasm_minus_ridge": -0.002215261571109295,
+    "bootstrap_95_ci": [
+      -0.008001813618466257,
+      0.003590317047201096
+    ],
+    "paired_permutation_p": 0.44575542445755423
+  },
+  "mse": {
+    "mean_delta_chasm_minus_ridge": 0.029600532725453377,
+    "bootstrap_95_ci": [
+      0.020714082289487123,
+      0.03850736320018768
+    ],
+    "paired_permutation_p": 9.999000099990002e-05
+  }
+}

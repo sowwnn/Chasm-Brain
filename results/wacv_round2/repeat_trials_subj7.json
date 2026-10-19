@@ -1,0 +1,24 @@
+{
+  "subject": 7,
+  "num_images": 1000,
+  "checkpoint": "checkpoints/chasm_rerun_s7/best_model.pth",
+  "prediction_target_pearson": {
+    "trial_averaged_mean": 0.4301174283027649,
+    "single_trial_means": [
+      0.303186684733722,
+      0.2851748588789367,
+      0.27524647890447224
+    ],
+    "single_trial_pooled_mean": 0.28786934083904364
+  },
+  "latent_sigma_vs_intertrial_variance": {
+    "pearson_r": -0.04808251501417764,
+    "pearson_p": 0.12864176709137312,
+    "pearson_bootstrap_95_ci": [
+      -0.11267679464965234,
+      0.016005619093196772
+    ],
+    "spearman_rho": -0.03921676545206605,
+    "spearman_p": 0.21532009301185018
+  }
+}

@@ -1,0 +1,53 @@
+model:
+  name: "HierarchicalARM_V3_ResNet50"
+  cls_dim: 2048
+  patch_dim: 2048
+  num_patches: 3
+  fmri_dim: 15724
+  voxels_per_cluster: 30
+  hidden_dim_1: 768
+  depth_what: 4
+  depth_where: 6
+  contrastive_dim: 256
+  embed_dim_2: 512
+  depth_2: 8
+  num_global_queries: 128
+  dropout: 0.4
+
+training:
+  batch_size: 16
+  lr: 3.0e-5
+  weight_decay: 0.01
+  max_epochs: 50
+  precision: "fp16"
+  save_dir: "checkpoints/exp1c_resnet50"
+  stage: 1
+  stage_1_epochs: 15
+  viz_interval: 5
+  grad_clip: 0.5
+  use_scheduler: true
+  warmup_epochs: 15
+  scheduler_type: "cosine"
+  early_stopping: true
+  patience: 15
+
+loss:
+  alpha: 2.0
+  tau: 0.2
+  pearson_weight: 0.3
+  contrastive_weight: 0.2
+  std_weight: 0.2
+  peak_alpha: 0.5
+  peak_tau: 0.3
+
+data:
+  subject: 1
+  huwng_base_path: "dataset/huwng"
+  train_embeddings_path: "data/exp1/features_resnet_sam/subj01/nsd_resnet50_multi_train_sub1.npy"
+  test_embeddings_path: "data/exp1/features_resnet_sam/subj01/nsd_resnet50_multi_test_sub1.npy"
+  roi_top_k_percent: 0.7
+  average_trials_train: false
+  average_trials_val: true
+  augment_noise_train: true
+  noise_std: 0.1
+  concat_train_val: false

@@ -1,0 +1,24 @@
+{
+  "config": "configs/slim_q32h1024_subj7.yaml",
+  "checkpoint": null,
+  "device": "NVIDIA GeForce RTX 4090",
+  "batch_size": 32,
+  "precision": "fp32",
+  "parameters": {
+    "stage1": 13250284,
+    "stage2_including_patch_pooler": 36081411,
+    "total": 49331695
+  },
+  "estimated_flops_per_image": {
+    "stage1": 3744924338.0,
+    "stage2": 7768086016.0,
+    "total": 11513010354.0,
+    "note": "Dense FLOPs plus an analytical Mamba estimate; normalization and elementwise ops are excluded."
+  },
+  "inference": {
+    "latency_ms_per_batch": 20.7002001953125,
+    "latency_ms_per_image": 0.6468812561035157,
+    "throughput_images_per_second": 1545.878769194044,
+    "peak_memory_bytes": 713467904
+  }
+}

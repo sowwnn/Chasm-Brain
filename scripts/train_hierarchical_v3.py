@@ -14,14 +14,92 @@ from pathlib import Path
 from torch.utils.tensorboard import SummaryWriter
 import sys
 import torch.nn.functional as F
+import random
+import json
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from model.hierarchical_v3_1 import HierarchicalARM_V3
+from model.hierarchical_v3_mlp import HierarchicalARM_V3_MLP
+from model.hierarchical_v3_transformer import HierarchicalARM_V3_Transformer
+from model.tben_official import HierarchicalARM_TBEn_Both, HierarchicalARM_V3_TBEn
 from model.contrastive_loss import InfoNCELoss
 from model.loss import PeakFocusedLoss
 from data.dataset_v7_h import create_dataloaders_v7h
 import matplotlib.pyplot as plt
+
+
+SUBJECT_SPECIFIC_PREFIXES = (
+    'stage1.what_head.',
+    'stage1.where_head.',
+    'stage1.brain_contrastive_head.',
+    'stage2.roi_pos_embed',
+    'stage2.global_head.4.',
+    'stage2.local_head.',
+    'stage2.remainder_head.',
+)
+
+HEAD_ONLY_PREFIXES = {
+    1: (
+        'stage1.what_head.',
+        'stage1.where_head.',
+        'stage1.brain_contrastive_head.',
+    ),
+    2: (
+        'stage2.roi_pos_embed',
+        'stage2.global_head.4.',
+        'stage2.local_head.',
+        'stage2.remainder_head.',
+    ),
+}
+
+
+def load_cross_dataset_backbone(model, checkpoint_path):
+    """Load only shape-compatible, non-subject-specific NSD parameters."""
+    source = torch.load(checkpoint_path, map_location='cpu', weights_only=True)
+    target = model.state_dict()
+    transferred = {}
+    skipped_subject = []
+    skipped_shape = []
+    for name, value in source.items():
+        if name not in target:
+            continue
+        if name.startswith(SUBJECT_SPECIFIC_PREFIXES):
+            skipped_subject.append(name)
+        elif value.shape != target[name].shape:
+            skipped_shape.append(name)
+        else:
+            transferred[name] = value
+    model.load_state_dict(transferred, strict=False)
+    return {
+        'checkpoint': checkpoint_path,
+        'transferred_tensors': len(transferred),
+        'transferred_parameters': int(sum(value.numel() for value in transferred.values())),
+        'skipped_subject_specific_tensors': len(skipped_subject),
+        'skipped_shape_tensors': len(skipped_shape),
+        'subject_specific_prefixes': list(SUBJECT_SPECIFIC_PREFIXES),
+    }
+
+
+def apply_head_only_policy(model, stage):
+    """Freeze the transferred representation and expose only BOLD-specific heads."""
+    prefixes = HEAD_ONLY_PREFIXES[stage]
+    for parameter in model.parameters():
+        parameter.requires_grad = False
+    trainable_names = []
+    for name, parameter in model.named_parameters():
+        if name.startswith(prefixes):
+            parameter.requires_grad = True
+            trainable_names.append(name)
+    if not trainable_names:
+        raise RuntimeError(f'head-only policy selected no parameters for Stage {stage}')
+    return {
+        'stage': stage,
+        'trainable_tensors': len(trainable_names),
+        'trainable_parameters': int(sum(p.numel() for p in model.parameters() if p.requires_grad)),
+        'total_parameters': int(sum(p.numel() for p in model.parameters())),
+        'trainable_prefixes': list(prefixes),
+    }
 
 
 def compute_pearson_batch(pred, target):
@@ -41,6 +119,21 @@ def compute_pearson_batch(pred, target):
             except:
                 continue
     return np.mean(corrs) if corrs else 0.0
+
+
+def select_stage2_guidance(predicted, ground_truth, mode):
+    """Select Stage 2 cluster conditioning for controlled ablations."""
+    if mode == 'predicted':
+        return predicted
+    if mode == 'none':
+        return torch.zeros_like(predicted)
+    if mode == 'shuffle':
+        if predicted.shape[0] < 2:
+            return predicted
+        return predicted[torch.randperm(predicted.shape[0], device=predicted.device)]
+    if mode == 'oracle':
+        return ground_truth
+    raise ValueError(f"Unknown guidance_mode: {mode!r}")
 
 
 def train_stage_1(model, dataloader, optimizer, scaler, device, config, epoch):
@@ -112,15 +205,18 @@ def train_stage_2(model, dataloader, optimizer, scaler, device, config, epoch):
     pearson_weight = config['loss'].get('pearson_weight', 0.5)
     std_weight = config['loss'].get('std_weight', 0.2)
     kl_weight = config['loss'].get('kl_weight', 0.001)
+    guidance_mode = config.get('experiment', {}).get('guidance_mode', 'predicted')
 
     pbar = tqdm(dataloader, desc=f"Stage 2 Train {epoch}")
     for batch in pbar:
         cls_token = batch['cls_token'].to(device)
         patch_tokens = batch['patch_tokens'].to(device)
         gt_voxels = batch['fmri'].to(device)
+        gt_roi_means = batch['roi_means'].to(device)
 
         with torch.no_grad():
-            guidance, _, _ = model.stage1(cls_token, patch_tokens)
+            predicted_guidance, _, _ = model.stage1(cls_token, patch_tokens)
+            guidance = select_stage2_guidance(predicted_guidance, gt_roi_means, guidance_mode)
 
         optimizer.zero_grad()
         with torch.amp.autocast(device_type='cuda', enabled=True):
@@ -163,7 +259,7 @@ def train_stage_2(model, dataloader, optimizer, scaler, device, config, epoch):
 
 
 @torch.no_grad()
-def validate(model, dataloader, device, stage):
+def validate(model, dataloader, device, stage, guidance_mode='predicted'):
     model.eval()
     total_pearson = 0
     total_mse = 0
@@ -179,7 +275,11 @@ def validate(model, dataloader, device, stage):
             pred, _, _ = model(cls_token, patch_tokens, stage=1)
         else:
             target = batch['fmri'].to(device)
-            _, pred, _ = model(cls_token, patch_tokens, stage=2)
+            predicted_guidance, _, _ = model.stage1(cls_token, patch_tokens)
+            guidance = select_stage2_guidance(
+                predicted_guidance, batch['roi_means'].to(device), guidance_mode
+            )
+            _, pred, _ = model(cls_token, patch_tokens, stage=2, gt_roi_means=guidance)
 
         mse = F.mse_loss(pred, target)
         total_mse += mse.item()
@@ -272,10 +372,44 @@ def main():
     parser.add_argument('--stage', type=int, choices=[1, 2], default=None)
     parser.add_argument('--load_stage1', type=str, default=None)
     parser.add_argument('--resume', type=str, default=None)
+    parser.add_argument('--guidance_mode', choices=['predicted', 'none', 'shuffle', 'oracle'])
+    parser.add_argument('--vae_mode', choices=['none', 'deterministic', 'stochastic'])
+    parser.add_argument('--kl_weight', type=float)
+    parser.add_argument('--seed', type=int)
+    parser.add_argument('--save_dir', type=str)
+    parser.add_argument('--backbone', choices=['mamba', 'mlp', 'transformer', 'tben', 'tben_both'])
+    parser.add_argument('--pretrained', type=str,
+                        help='Cross-dataset source checkpoint; loads compatible backbone tensors only')
+    parser.add_argument('--adaptation', choices=['full', 'head_only'], default='full')
+    parser.add_argument('--lr', type=float)
     args = parser.parse_args()
 
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
+
+    experiment = config.setdefault('experiment', {})
+    if args.guidance_mode is not None:
+        experiment['guidance_mode'] = args.guidance_mode
+    if args.vae_mode is not None:
+        experiment['vae_mode'] = args.vae_mode
+    if args.kl_weight is not None:
+        config['loss']['kl_weight'] = args.kl_weight
+    if args.save_dir is not None:
+        config['training']['save_dir'] = args.save_dir
+    if args.backbone is not None:
+        experiment['backbone'] = args.backbone
+    if args.lr is not None:
+        config['training']['lr'] = args.lr
+
+    seed = args.seed if args.seed is not None else experiment.get('seed', 42)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+    # CLI --stage overrides config; config 'stage' key is fallback
+    train_stage = args.stage if args.stage is not None else config['training'].get('stage')
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     save_dir = Path(config['training']['save_dir'])
@@ -300,12 +434,25 @@ def main():
         noise_std=config['data'].get('noise_std', 0.1),
         train_image_ids_path=config['data'].get('train_image_ids_path'),
         test_image_ids_path=config['data'].get('test_image_ids_path'),
-        concat_train_val=config['data'].get('concat_train_val', False),
+        concat_train_val=train_stage == 1,
         dinov2_layer=config['data'].get('dinov2_layer', -1),  # Default to last layer
+        train_fmri_path=config['data'].get('train_fmri_path'),
+        test_fmri_path=config['data'].get('validation_fmri_path', config['data'].get('test_fmri_path')),
+        train_sample_indices_path=config['data'].get('train_sample_indices_path'),
+        test_sample_indices_path=config['data'].get('validation_sample_indices_path'),
     )
 
-    # Initialize Model
-    model = HierarchicalARM_V3(
+    # Initialize the requested matched sequence backbone.
+    backbone = experiment.get('backbone', 'mamba')
+    model_classes = {
+        'mamba': HierarchicalARM_V3,
+        'mlp': HierarchicalARM_V3_MLP,
+        'transformer': HierarchicalARM_V3_Transformer,
+        'tben': HierarchicalARM_V3_TBEn,
+        'tben_both': HierarchicalARM_TBEn_Both,
+    }
+    model_class = model_classes[backbone]
+    model = model_class(
         cls_dim=config['model']['cls_dim'],
         patch_dim=config['model']['patch_dim'],
         num_patches=config['model']['num_patches'],
@@ -319,37 +466,75 @@ def main():
         depth_2=config['model']['depth_2'],
         num_global_queries=config['model']['num_global_queries'],
         dropout=config['model'].get('dropout', 0.1),
+        latent_dim=config['model'].get('latent_dim', 128),
+        vae_mode=experiment.get('vae_mode', 'stochastic'),
+        **({'global_hidden': config['model']['global_hidden']}
+           if 'global_hidden' in config['model'] and backbone == 'mamba' else {}),
+        **({
+            'tben_hidden_dim': config['model'].get('tben_hidden_dim', 768),
+            'tben_nheads': config['model'].get('tben_nheads', 16),
+            'tben_dim_feedforward': config['model'].get('tben_dim_feedforward', 1024),
+            'tben_enc_layers': config['model'].get('tben_enc_layers', 0),
+            'tben_dec_layers': config['model'].get('tben_dec_layers', 1),
+            'tben_pre_norm': config['model'].get('tben_pre_norm', True),
+            'tben_enc_output_layer': config['model'].get('tben_enc_output_layer', 1),
+        } if backbone in ('tben', 'tben_both') else {}),
     ).to(device)
 
     print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
     print(f"Num ROIs: {model.num_rois}")
+    print(f"Experiment: guidance={experiment.get('guidance_mode', 'predicted')}, "
+          f"vae={experiment.get('vae_mode', 'stochastic')}, "
+          f"backbone={backbone}, kl_weight={config['loss'].get('kl_weight', 0.001)}, seed={seed}")
 
     scaler = torch.amp.GradScaler('cuda', enabled=config['training']['precision'] == 'fp16')
 
     stage1_epochs = config['training'].get('stage_1_epochs', 150)
     total_epochs = config['training']['max_epochs']
 
-    train_stage = args.stage
+    if train_stage == 1:
+        total_epochs = stage1_epochs
 
     if train_stage == 2 and args.load_stage1 is None and args.resume is None:
         print("ERROR: --load_stage1 or --resume required for Stage 2")
         return
 
+    transfer_manifest = None
     if args.resume is not None:
         print(f"Resuming from: {args.resume}")
         model.load_state_dict(torch.load(args.resume, map_location=device))
     elif train_stage == 2 and args.load_stage1 is not None:
         print(f"Loading Stage 1 from: {args.load_stage1}")
         model.load_state_dict(torch.load(args.load_stage1, map_location=device), strict=False)
+    elif args.pretrained is not None:
+        print(f"Loading cross-dataset backbone from: {args.pretrained}")
+        transfer_manifest = load_cross_dataset_backbone(model, args.pretrained)
+        print(json.dumps(transfer_manifest, indent=2))
+
+    adaptation_manifest = None
+    if args.adaptation == 'head_only':
+        adaptation_manifest = apply_head_only_policy(model, train_stage)
+        print(json.dumps(adaptation_manifest, indent=2))
+    manifest = {
+        'adaptation': args.adaptation,
+        'transfer': transfer_manifest,
+        'policy': adaptation_manifest,
+    }
+    (save_dir / f'transfer_manifest_stage{train_stage}.json').write_text(
+        json.dumps(manifest, indent=2) + '\n'
+    )
 
     optimizer_s1 = optim.AdamW(model.stage1.parameters(), lr=config['training']['lr'], weight_decay=config['training']['weight_decay'])
     optimizer_s2 = optim.AdamW(list(model.stage2.parameters()) + list(model.patch_pooler.parameters()),
                                lr=config['training']['lr'], weight_decay=config['training']['weight_decay'])
 
     best_p_s1, best_p_s2 = -1.0, -1.0
+    no_improve_s1, no_improve_s2 = 0, 0
+    patience = config['training'].get('patience', 15)
 
     print("=== Starting Training V3 ===")
-    print(f"Architecture: Dual-Stream Mamba (Stage 1) -> Mamba Global+Local (Stage 2)")
+    print(f"Architecture: Dual-Stream {backbone.upper()} (Stage 1) -> "
+          f"{backbone.upper()} Global+Local (Stage 2)")
 
     for epoch in range(1, total_epochs + 1):
         if train_stage == 1:
@@ -373,14 +558,15 @@ def main():
             writer.add_scalar('Stage1/ValPearson', val_p, epoch)
             writer.add_scalar('Stage1/ValMSE', val_mse, epoch)
 
-            # Log fusion weights
-            with torch.no_grad():
-                sample_batch = next(iter(val_loader))
-                cls_t = sample_batch['cls_token'][:4].to(device)
-                patch_t = sample_batch['patch_tokens'][:4].to(device)
-                weights = model.get_stage1_weights(cls_t, patch_t)
-                writer.add_scalar('Stage1/FusionWeight_What', weights[:, 0].mean().item(), epoch)
-                writer.add_scalar('Stage1/FusionWeight_Where', weights[:, 1].mean().item(), epoch)
+            # Log fusion weights (dual-stream backbones only; TBEn has no gate)
+            if hasattr(model.stage1, 'get_fusion_weights'):
+                with torch.no_grad():
+                    sample_batch = next(iter(val_loader))
+                    cls_t = sample_batch['cls_token'][:4].to(device)
+                    patch_t = sample_batch['patch_tokens'][:4].to(device)
+                    weights = model.get_stage1_weights(cls_t, patch_t)
+                    writer.add_scalar('Stage1/FusionWeight_What', weights[:, 0].mean().item(), epoch)
+                    writer.add_scalar('Stage1/FusionWeight_Where', weights[:, 1].mean().item(), epoch)
 
             print(f"S1 Ep {epoch} | L_Tot:{l_tot:.3f} L_Peak:{l_peak:.3f} L_Cont:{l_cont:.3f} | Tr P:{p:.3f} Val P:{val_p:.3f} MSE:{val_mse:.3f}")
 
@@ -391,8 +577,14 @@ def main():
 
             if val_p > best_p_s1:
                 best_p_s1 = val_p
+                no_improve_s1 = 0
                 torch.save(model.state_dict(), save_dir / 'best_stage1.pth')
                 print(f"✓ Saved best Stage 1: {val_p:.4f}")
+            else:
+                no_improve_s1 += 1
+                if no_improve_s1 >= patience:
+                    print(f"Early stopping Stage 1 at epoch {epoch} (no improvement for {patience} epochs)")
+                    break
 
         if should_train_s2:
             if train_stage is None and epoch == stage1_epochs + 1:
@@ -403,7 +595,10 @@ def main():
                     print("Loaded best Stage 1 weights.")
 
             loss, loss_mse, loss_std, p = train_stage_2(model, train_loader, optimizer_s2, scaler, device, config, epoch)
-            val_p, val_mse, val_preds, val_targets = validate(model, val_loader, device, stage=2)
+            val_p, val_mse, val_preds, val_targets = validate(
+                model, val_loader, device, stage=2,
+                guidance_mode=experiment.get('guidance_mode', 'predicted')
+            )
 
             writer.add_scalar('Stage2/Loss', loss, epoch)
             writer.add_scalar('Stage2/TrainMSE', loss_mse, epoch)
@@ -421,8 +616,14 @@ def main():
 
             if val_p > best_p_s2:
                 best_p_s2 = val_p
+                no_improve_s2 = 0
                 torch.save(model.state_dict(), save_dir / 'best_model.pth')
                 print(f"✓ Saved best Stage 2: {val_p:.4f}")
+            else:
+                no_improve_s2 += 1
+                if no_improve_s2 >= patience:
+                    print(f"Early stopping Stage 2 at epoch {epoch} (no improvement for {patience} epochs)")
+                    break
 
     print("Training Complete.")
     writer.close()

@@ -1,0 +1,64 @@
+{
+  "diagnostic": "inference-only; retrain variants for the primary ablation table",
+  "subject": 1,
+  "num_images": 113,
+  "checkpoint": "checkpoints/wacv_round2/bold5000_csi1/seed_42/best_model.pth",
+  "modes": {
+    "predicted": {
+      "pearson_mean": 0.18278229236602783,
+      "pearson_95_ci": [
+        0.1638954423367977,
+        0.2013381641358137
+      ],
+      "mse_mean": 0.2942694127559662
+    },
+    "none": {
+      "pearson_mean": -0.007813017815351486,
+      "pearson_95_ci": [
+        -0.027680066088214515,
+        0.012316943658515808
+      ],
+      "mse_mean": 0.4193987250328064,
+      "paired_vs_predicted": {
+        "mean_delta": -0.19059529900550842,
+        "bootstrap_95_ci": [
+          -0.22008722499012948,
+          -0.16110314689576627
+        ],
+        "paired_permutation_p": 9.999000099990002e-05
+      }
+    },
+    "shuffle": {
+      "pearson_mean": 0.013823213055729866,
+      "pearson_95_ci": [
+        -0.015267005935311316,
+        0.04350414173677564
+      ],
+      "mse_mean": 0.3477685749530792,
+      "paired_vs_predicted": {
+        "mean_delta": -0.16895908117294312,
+        "bootstrap_95_ci": [
+          -0.204192453622818,
+          -0.135333738848567
+        ],
+        "paired_permutation_p": 9.999000099990002e-05
+      }
+    },
+    "oracle": {
+      "pearson_mean": 0.14438553154468536,
+      "pearson_95_ci": [
+        0.12636903636157512,
+        0.163400973752141
+      ],
+      "mse_mean": 0.3276333510875702,
+      "paired_vs_predicted": {
+        "mean_delta": -0.03839674964547157,
+        "bootstrap_95_ci": [
+          -0.059764052368700506,
+          -0.016450267471373087
+        ],
+        "paired_permutation_p": 0.0004999500049995
+      }
+    }
+  }
+}

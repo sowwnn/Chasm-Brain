@@ -1,0 +1,13 @@
+{
+  "status": "failed_nonfinite",
+  "experiment": "direct_stage2_only",
+  "description": "DINOv2 to voxels with learned ROI tokens and absolute local prediction; no cluster values",
+  "subject": 7,
+  "seed": 42,
+  "parameters": 268732419,
+  "max_epochs": 5,
+  "patience": 3,
+  "history": [],
+  "failure": "The total norm of order 2.0 for gradients from `parameters` is non-finite, so it cannot be clipped. To disable this error and scale the gradients by the non-finite norm anyway, set `error_if_nonfinite=False`",
+  "elapsed_seconds": 59.26454567909241
+}

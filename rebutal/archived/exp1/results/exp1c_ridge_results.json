@@ -1,0 +1,27 @@
+{
+  "DINOv2 ViT-B/14": {
+    "pearson": 0.3744630217552185,
+    "mse": 0.3629061148017645,
+    "train_pearson": 0.4318767786026001
+  },
+  "CLIP SDXL multi (last layer)": {
+    "pearson": 0.37415239214897156,
+    "mse": 0.3629489733427763,
+    "train_pearson": 0.4761873781681061
+  },
+  "SAM ViT-B multi (last layer)": {
+    "pearson": 0.3649701476097107,
+    "mse": 0.3663131108433008,
+    "train_pearson": 0.3900601863861084
+  },
+  "ResNet-50 multi (last layer)": {
+    "pearson": 0.3501441478729248,
+    "mse": 0.37234353563189504,
+    "train_pearson": 0.5103615522384644
+  },
+  "ConvNeXT-Large": {
+    "pearson": 0.3048,
+    "mse": 0.4961401297152042,
+    "train_pearson": 0.4553
+  }
+}

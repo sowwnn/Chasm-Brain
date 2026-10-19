@@ -1,0 +1,120 @@
+{
+  "status": "failed_nonfinite",
+  "experiment": "direct_stage2_only",
+  "description": "DINOv2 to voxels with learned ROI tokens and absolute local prediction; no cluster values",
+  "subject": 7,
+  "seed": 42,
+  "vae_mode": "stochastic",
+  "parameters": 268732419,
+  "max_epochs": 50,
+  "patience": 10,
+  "history": [
+    {
+      "epoch": 1,
+      "train": {
+        "loss": 1.4559014512409378,
+        "mse": 1.0269181363523219,
+        "std": 0.6456525462590078,
+        "pearson": 0.0004940382545357648,
+        "grad_norm": 0.14632816713475671,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": -0.009290613234043121,
+        "pearson_std": 0.27875471115112305,
+        "mse": 0.4340289831161499,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 2,
+      "train": {
+        "loss": 1.4403890263850436,
+        "mse": 1.007578089143882,
+        "std": 0.6673163490221876,
+        "pearson": 0.0021790447401839573,
+        "grad_norm": 0.17787049833601198,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": -0.005094509106129408,
+        "pearson_std": 0.2921571433544159,
+        "mse": 0.43106958270072937,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 3,
+      "train": {
+        "loss": 1.4376272377453099,
+        "mse": 1.0045469513567318,
+        "std": 0.6685098362280097,
+        "pearson": 0.00207963090418691,
+        "grad_norm": 0.194857599931821,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": -0.00413507828488946,
+        "pearson_std": 0.2938152849674225,
+        "mse": 0.43199071288108826,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 4,
+      "train": {
+        "loss": 1.436236884246093,
+        "mse": 1.0030541936132267,
+        "std": 0.6691511230960859,
+        "pearson": 0.002167324401595114,
+        "grad_norm": 0.20362189287498753,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": -0.0041924030520021915,
+        "pearson_std": 0.29479071497917175,
+        "mse": 0.43205493688583374,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 5,
+      "train": {
+        "loss": 1.4352925560511163,
+        "mse": 1.001908100231121,
+        "std": 0.670263197074157,
+        "pearson": 0.002247716939576138,
+        "grad_norm": 0.21251382895282436,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": -0.0037080668844282627,
+        "pearson_std": 0.2946668565273285,
+        "mse": 0.43004998564720154,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 6,
+      "train": {
+        "loss": 1.4341099420617625,
+        "mse": 1.0005869658250683,
+        "std": 0.6733747640821292,
+        "pearson": 0.0038680958493655794,
+        "grad_norm": 0.23340411951780884,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.05463742837309837,
+        "pearson_std": 0.24624136090278625,
+        "mse": 0.4268742799758911,
+        "num_samples": 1000
+      }
+    }
+  ],
+  "latest_epoch": 6,
+  "best_epoch": 6,
+  "best_validation_pearson": 0.05463742837309837,
+  "elapsed_seconds": 472.08666706085205,
+  "failure": "more than 5 non-finite gradient steps at epoch=7, batch=83"
+}

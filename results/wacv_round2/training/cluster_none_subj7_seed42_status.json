@@ -1,0 +1,16 @@
+{
+  "status": "complete",
+  "subject": 7,
+  "seed": 42,
+  "guidance_mode": "none",
+  "vae_mode": "stochastic",
+  "kl_weight": 0.001,
+  "latest_completed_epoch": 48,
+  "best_epoch": 28,
+  "best_validation_pearson": 0.1315,
+  "best_epoch_validation_mse": 0.439,
+  "stopping_reason": "early stopping after 20 epochs without improvement",
+  "checkpoint_dir": "checkpoints/wacv_round2/cluster_none/seed_42",
+  "raw_log": "results/wacv_round2/training/cluster_none_subj7_seed42.log",
+  "note": "Final result from the best checkpoint."
+}

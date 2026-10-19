@@ -1,0 +1,41 @@
+{
+  "dataset": "BOLD5000",
+  "subject": "CSI1",
+  "num_paired_test_images": 113,
+  "transfer_vs_scratch": {
+    "pearson": {
+      "mean_delta": 0.0014102932764217257,
+      "bootstrap_95_ci": [
+        -0.009988635662011802,
+        0.013116684183478337
+      ],
+      "paired_permutation_p": 0.8072192780721927
+    },
+    "mse": {
+      "mean_delta": -0.005445489659905434,
+      "bootstrap_95_ci": [
+        -0.01106425393372774,
+        -2.1763301083410785e-05
+      ],
+      "paired_permutation_p": 0.051394860513948606
+    }
+  },
+  "transfer_vs_ridge": {
+    "pearson": {
+      "mean_delta": 0.007530499715358019,
+      "bootstrap_95_ci": [
+        -0.0014173198374919592,
+        0.017449689749628305
+      ],
+      "paired_permutation_p": 0.12288771122887711
+    },
+    "mse": {
+      "mean_delta": 0.027457106858491898,
+      "bootstrap_95_ci": [
+        0.02368547855876386,
+        0.03123646811582148
+      ],
+      "paired_permutation_p": 9.999000099990002e-05
+    }
+  }
+}

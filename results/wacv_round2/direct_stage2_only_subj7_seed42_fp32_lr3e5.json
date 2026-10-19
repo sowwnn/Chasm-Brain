@@ -1,0 +1,35 @@
+{
+  "status": "failed_nonfinite",
+  "experiment": "direct_stage2_only",
+  "description": "DINOv2 to voxels with learned ROI tokens and absolute local prediction; no cluster values",
+  "subject": 7,
+  "seed": 42,
+  "vae_mode": "stochastic",
+  "parameters": 268732419,
+  "max_epochs": 50,
+  "patience": 10,
+  "history": [
+    {
+      "epoch": 1,
+      "train": {
+        "loss": 1.4488432964537632,
+        "mse": 1.0172421072442903,
+        "std": 0.6598371095858152,
+        "pearson": 0.0012277525163024736,
+        "grad_norm": 0.155954709557169,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": -0.0048555610701441765,
+        "pearson_std": 0.29003018140792847,
+        "mse": 0.4346051812171936,
+        "num_samples": 1000
+      }
+    }
+  ],
+  "latest_epoch": 1,
+  "best_epoch": 1,
+  "best_validation_pearson": -0.0048555610701441765,
+  "elapsed_seconds": 145.90384984016418,
+  "failure": "more than 5 non-finite gradient steps at epoch=2, batch=793"
+}

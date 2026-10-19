@@ -1,0 +1,32 @@
+{
+  "status": "complete",
+  "subject": "CSI1",
+  "split_protocol": {
+    "train": "4803 images presented exactly once",
+    "test": "113 repeated images with fMRI targets averaged across presentations"
+  },
+  "fmri": {
+    "source": "BOLD5000 Release 2.0 TYPED-FITHRF-GLMDENOISE-RR whole-brain betas",
+    "normalization": "per-session per-voxel z-score",
+    "visual_cortex_voxels": 13197,
+    "train_shape": [4803, 13197],
+    "test_shape": [113, 13197],
+    "all_finite": true
+  },
+  "dinov2": {
+    "model": "DINOv2 ViT-B/14",
+    "layers": [3, 6, 9, 12],
+    "token_order": "CLS followed by 256 patch tokens",
+    "dtype": "float16",
+    "train_shape": [4803, 4, 257, 768],
+    "test_shape": [113, 4, 257, 768],
+    "all_finite": true
+  },
+  "validation": {
+    "train_rows_aligned": true,
+    "test_rows_aligned": true,
+    "wholebrain_session_md5_verified": "15/15"
+  },
+  "data_root": "dataset/BOLD5000/processed/CSI1",
+  "raw_log": "results/wacv_round2/training/bold5000_csi1_dinov2.log"
+}

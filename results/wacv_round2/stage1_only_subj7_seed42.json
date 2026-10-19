@@ -1,0 +1,30 @@
+{
+  "subject": 7,
+  "checkpoint": "checkpoints/chasm_rerun_s7/best_model.pth",
+  "num_images": 1000,
+  "readout": "predicted cluster values repeated over their 30 voxels; remainder voxels take the per-image cluster mean",
+  "stage1_only_predicted": {
+    "pearson_mean": 0.2551037219348364,
+    "pearson_95_ci": [
+      0.2497582806537277,
+      0.2605325312387315
+    ],
+    "mse_mean": 0.5579932134449482
+  },
+  "stage1_only_oracle": {
+    "pearson_mean": 0.4057322315573692,
+    "pearson_95_ci": [
+      0.4028099226459861,
+      0.4087641709655523
+    ],
+    "mse_mean": 0.4176089516580105
+  },
+  "cluster_level": {
+    "pearson_mean": 0.5991509300256148,
+    "pearson_95_ci": [
+      0.588825447011739,
+      0.609041786449682
+    ],
+    "mse_mean": 0.09097878567315638
+  }
+}

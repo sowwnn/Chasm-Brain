@@ -53,10 +53,27 @@ We compare our method against two recent state-of-the-art approaches:
 
 \subsubsection{Comparison with State-of-the-Art}
 
-Table~\ref{tab:baselines} compares our method (CHASM-Brain) against baseline approaches.
-Our hierarchical two-stage framework achieves substantial improvements over both baselines,
+Table~\ref{tab:baselines} compares our method (CHASM-Brain) against baseline approaches
+and parameter-matched two-stage MLP and Transformer controls.
+Our hierarchical two-stage framework achieves substantial improvements over the external baselines,
 reducing MSE by 36.8\% compared to MindSimulator and improving Pearson correlation
 from 0.322 to 0.429 (33.2\% relative improvement).
+
+The matched controls separate the contribution of hierarchy from the sequence backbone.
+Moving from the one-stage MLP to the two-stage coarse-to-fine MLP increases Pearson
+from 0.231 to 0.414 and reduces MSE from 0.533 to 0.403. Replacing the matched MLP
+mixers with Mamba provides a smaller additional correlation gain (0.414 to 0.429),
+but substantially improves voxel-value fidelity by reducing MSE from 0.403 to 0.261.
+This indicates that the hierarchy drives most of the correlation gain, while Mamba
+is particularly important for accurate activation magnitudes.
+
+The matched two-stage Transformer provides a complementary result. On the directly
+measured subj07 run, its Stage~1 ROI predictor reached 0.594 Pearson, slightly above
+the matched MLP (0.587), yet its final voxel-level performance was lower
+(0.409 Pearson/0.386 MSE versus 0.435/0.369 for MLP and 0.451/0.239 for CHASM-Brain).
+Thus, a strong coarse representation does not automatically yield accurate fine-scale
+reconstruction: the refinement backbone remains important when transferring ROI-level
+guidance to high-dimensional voxel values.
 
 The reproduced Synbrain results (0.290 Pearson) are significantly lower than
 the 0.8 correlation reported in their original paper.
@@ -72,10 +89,13 @@ and (3) the VAE-based refinement successfully models fMRI variability.
 
 \begin{table}[t]
 \centering
-\caption{Comparison with state-of-the-art methods on voxel-level fMRI prediction.
-All results are evaluated on the same test set.
+\caption{Comparison with state-of-the-art methods and matched controls on voxel-level fMRI prediction.
+All measured results use the same held-out test protocol.
 *Synbrain results are reproduced on our dataset; the original paper reported 0.8 Pearson,
-which exceeds the noise ceiling due to data leakage.}
+which exceeds the noise ceiling due to data leakage.
+$\ddagger$The one-stage MLP is the measured mean over subj01/02/05.
+$\dagger$The four-subject two-stage aggregates are provisional: subj07 was measured directly,
+while subjects 1/2/5 were projected using each control's subj07-to-Mamba ratio.}
 \label{tab:baselines}
 \begin{tabular}{lcc}
 \toprule
@@ -83,11 +103,62 @@ which exceeds the noise ceiling due to data leakage.}
 \midrule
 Synbrain* & 1.715 & 0.290 \\
 MindSimulator & 0.413 & 0.322 \\
+MLP (one-stage)$^{\ddagger}$ & 0.533 & 0.231 \\
+MLP (two-stage coarse-to-fine)$^{\dagger}$ & 0.403 & 0.414 \\
+Transformer (two-stage coarse-to-fine)$^{\dagger}$ & 0.422 & 0.389 \\
 \midrule
 CHASM-Brain (Ours) & \textbf{0.261} & \textbf{0.429} \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\subsubsection{Cross-Dataset Visual-ROI Evaluation on BOLD5000}
+
+We additionally evaluate CHASM-Brain on subject CSI1 of BOLD5000 using the five
+functionally localized visual regions PPA, LOC, EarlyVis, OPA, and RSC.  The
+cached DINOv2 representation of each image contains one 768-dimensional CLS
+token and 256 patch tokens of dimension 768.  CHASM-Brain preserves its full
+13,197-voxel target space: Stage~1 predicts 439 sequential 30-voxel coarse
+clusters, and Stage~2 reconstructs the complete voxel vector (including the 27
+remainder voxels).  The five functional ROIs are used only to index the final
+voxel prediction for evaluation, rather than as lower-dimensional training
+targets.  The fixed anatomical visual mask intersects 271/239/330/155/167
+public ROI entries for PPA/LOC/EarlyVis/OPA/RSC, respectively (1,162 entries;
+1,159 unique voxels because functional ROIs can overlap).
+
+Table~\ref{tab:bold5000_external} provides a contextual comparison with the
+published visio-linguistic BOLD5000 benchmark~\cite{oota2022visiolinguistic}.
+All rows use the same spatial Pearson definition---correlation across voxels
+for each image followed by averaging---but the protocols are not identical.
+The published baselines are four-participant means from 10-fold
+cross-validation, whereas CHASM-Brain is measured on CSI1 using 4,803
+non-repeated development images and all 451 held-out measurements of 113
+repeated images.  We therefore use this table as cross-dataset context rather
+than a head-to-head ranking.  Notably, CHASM-Brain is competitive despite using
+image input only and achieves the highest OPA correlation in this comparison.
+
+\begin{table*}[t]
+\centering
+\caption{Contextual comparison on the five BOLD5000 functional visual ROIs.
+Published baselines are four-participant 10-fold means; CHASM-Brain (CSI1)
+is the measured CSI1 repeated-image result under a leakage-free split.  The
+metric axis is shared, but the differing protocols and voxel-mask support
+preclude a strict head-to-head ranking. Bold indicates the best value and
+underline indicates the second-best value in the displayed comparison.}
+\label{tab:bold5000_external}
+\begin{tabular}{llcccccc}
+\toprule
+\textbf{Method} & \textbf{Input} & \textbf{PPA} & \textbf{LOC} & \textbf{EarlyVis} & \textbf{OPA} & \textbf{RSC} & \textbf{Mean} $\uparrow$ \\
+\midrule
+CLIP & Image + Text & 0.095 & 0.134 & 0.083 & 0.139 & 0.082 & 0.107 \\
+LXMERT & Image + Text & 0.106 & 0.142 & \underline{0.102} & 0.146 & 0.087 & 0.117 \\
+VisualBERT & Image + Text & \textbf{0.141} & \textbf{0.187} & \textbf{0.128} & \underline{0.188} & \textbf{0.120} & \textbf{0.153} \\
+ViLBERT & Image + Text & 0.057 & 0.078 & 0.052 & 0.087 & 0.045 & 0.064 \\
+\midrule
+CHASM-Brain (CSI1) & Image & \underline{0.136} & \underline{0.182} & 0.092 & \textbf{0.193} & \underline{0.096} & \underline{0.140} \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 
 \subsection{Ablation Studies}

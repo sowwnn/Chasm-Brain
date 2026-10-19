@@ -63,19 +63,21 @@ class NeuroFluxDatasetV7H(Dataset):
         """
         # Check embeddings format
         if embeddings.ndim == 2:
-            # Old format: [N, 768] - CLS only
+            # Old format: [N, D] - CLS only
             print(f"Warning: Embeddings are CLS-only format [N, {embeddings.shape[1]}]. "
                   "Consider using CLS+patches format for V3 model.")
             self.embeddings_format = "cls_only"
             self.embeddings = embeddings
-        elif embeddings.ndim == 3 and embeddings.shape[1] == 257:
-            # New format: [N, 257, 768] - CLS + 256 patches
+            self._cls_dim = embeddings.shape[1]
+        elif embeddings.ndim == 3:
+            # [N, T, D] — token 0 is CLS, tokens 1: are patches
             self.embeddings_format = "cls_patches"
             self.embeddings = embeddings
-            print(f"Using CLS + patches format: {embeddings.shape}")
+            print(f"Using CLS + patches format: {embeddings.shape} "
+                  f"(num_patches={embeddings.shape[1]-1}, dim={embeddings.shape[2]})")
         else:
             raise ValueError(f"Unsupported embeddings shape: {embeddings.shape}. "
-                           "Expected [N, 768] or [N, 257, 768]")
+                           "Expected [N, D] or [N, T, D]")
 
         self.voxels_per_cluster = voxels_per_cluster
         self.roi_top_k_percent = roi_top_k_percent
@@ -129,9 +131,9 @@ class NeuroFluxDatasetV7H(Dataset):
             cls_token = emb[0]  # [768]
             patch_tokens = emb[1:]  # [256, 768]
         else:
-            # CLS only - create dummy patches
-            cls_token = self.embeddings[image_id].astype(np.float32)  # [768]
-            patch_tokens = np.zeros((256, 768), dtype=np.float32)
+            # CLS only - create dummy patches matching cls dim
+            cls_token = self.embeddings[image_id].astype(np.float32)  # [D]
+            patch_tokens = np.zeros((256, self._cls_dim), dtype=np.float32)
 
         # Add noise augmentation
         if self.augment_noise:
@@ -242,6 +244,8 @@ def load_neuroflux_data_v7h(
     image_ids_path: Optional[str] = None,  # Deprecated - HUWNG embeddings are pre-aligned
     use_float16: bool = False,
     dinov2_layer: int = -1,  # Which layer to use from multilayer features (-1 = last)
+    fmri_path: Optional[str] = None,  # Override fMRI file path (supports pre-averaged (N,V) arrays)
+    sample_indices_path: Optional[str] = None,  # Select aligned rows without duplicating embeddings
 ) -> NeuroFluxDatasetV7H:
     """
     Load data from HUWNG dataset format for HierarchicalARM V3.
@@ -306,37 +310,49 @@ def load_neuroflux_data_v7h(
         else:
             subj_str = f"sub{subj}"
         
-        fmri_file = huwng_path / f"subj0{subj}" / f"nsd_{split}_fmri_zscore_{subj_str}.npy"
-        
-        if not fmri_file.exists():
-            print(f"Warning: File {fmri_file} not found, skipping subject {subj}")
+        resolved_fmri_path = Path(fmri_path) if fmri_path is not None else \
+            huwng_path / f"subj0{subj}" / f"nsd_{split}_fmri_zscore_{subj_str}.npy"
+
+        if not resolved_fmri_path.exists():
+            print(f"Warning: File {resolved_fmri_path} not found, skipping subject {subj}")
             continue
-        
-        # Load fMRI data: shape (N, 3, 15724)
-        print(f"  Loading fMRI from {fmri_file}...")
-        raw_fmri = np.load(fmri_file)  # (N_images, 3_trials, 15724_voxels)
+
+        print(f"  Loading fMRI from {resolved_fmri_path}...")
+        raw_fmri = np.load(resolved_fmri_path, mmap_mode='r')
         print(f"  Loaded shape: {raw_fmri.shape}")
-        
-        n_images = raw_fmri.shape[0]
-        n_trials = raw_fmri.shape[1]
-        n_voxels = raw_fmri.shape[2]
-        
-        if average_trials:
-            # Average across trials: (N, 3, 15724) -> (N, 15724)
-            print(f"  Averaging {n_trials} trials per image...")
-            fmri_s = np.mean(raw_fmri, axis=1).astype(np.float32)
-            # Image IDs: simple sequential from 0 to N-1
-            image_ids_s = np.arange(n_images)
-            
-            print(f"  After averaging: {fmri_s.shape}")
+
+        sample_indices = None
+        if sample_indices_path is not None:
+            sample_indices = np.load(sample_indices_path).astype(np.int64)
+            if sample_indices.ndim != 1:
+                raise ValueError(f"sample indices must be 1-D: {sample_indices_path}")
+            if len(sample_indices) == 0 or sample_indices.min() < 0 or sample_indices.max() >= raw_fmri.shape[0]:
+                raise IndexError(f"sample indices out of bounds for {resolved_fmri_path}")
+            print(f"  Selecting {len(sample_indices)} aligned rows from {sample_indices_path}")
+            raw_fmri = raw_fmri[sample_indices]
+
+        if raw_fmri.ndim == 2:
+            # Pre-averaged format: (N, V) — e.g. from nsd_raw_subj01 pipeline
+            fmri_s = raw_fmri.astype(np.float32)
+            image_ids_s = sample_indices if sample_indices is not None else np.arange(raw_fmri.shape[0])
+            n_images = raw_fmri.shape[0]
+            print(f"  Pre-averaged fMRI: {fmri_s.shape}")
         else:
-            # Keep all trials: (N, 3, 15724) -> (N*3, 15724)
-            print(f"  Keeping all {n_trials} trials...")
-            fmri_s = raw_fmri.reshape(-1, n_voxels).astype(np.float32)
-            # Each image has 3 trials, so repeat image indices
-            image_ids_s = np.repeat(np.arange(n_images), n_trials)
-            
-            print(f"  After flattening trials: {fmri_s.shape}")
+            n_images = raw_fmri.shape[0]
+            n_trials = raw_fmri.shape[1]
+            n_voxels = raw_fmri.shape[2]
+
+            if average_trials:
+                print(f"  Averaging {n_trials} trials per image...")
+                fmri_s = np.mean(raw_fmri, axis=1).astype(np.float32)
+                image_ids_s = sample_indices if sample_indices is not None else np.arange(n_images)
+                print(f"  After averaging: {fmri_s.shape}")
+            else:
+                print(f"  Keeping all {n_trials} trials...")
+                fmri_s = raw_fmri.reshape(-1, n_voxels).astype(np.float32)
+                base_ids = sample_indices if sample_indices is not None else np.arange(n_images)
+                image_ids_s = np.repeat(base_ids, n_trials)
+                print(f"  After flattening trials: {fmri_s.shape}")
         
         fmri_data[subj] = fmri_s
         image_ids[subj] = image_ids_s
@@ -374,6 +390,10 @@ def create_dataloaders_v7h(
     use_float16: bool = False,
     concat_train_val: bool = False,
     dinov2_layer: int = -1,  # Which DINOv2 layer to use
+    train_fmri_path: Optional[str] = None,  # Override train fMRI path
+    test_fmri_path: Optional[str] = None,   # Override test fMRI path
+    train_sample_indices_path: Optional[str] = None,
+    test_sample_indices_path: Optional[str] = None,
 ):
     """
     Create train and validation dataloaders for V3 model using HUWNG dataset.
@@ -399,6 +419,8 @@ def create_dataloaders_v7h(
         image_ids_path=train_image_ids_path,
         use_float16=use_float16,
         dinov2_layer=dinov2_layer,
+        fmri_path=train_fmri_path,
+        sample_indices_path=train_sample_indices_path,
     )
 
     val_dataset = load_neuroflux_data_v7h(
@@ -414,9 +436,10 @@ def create_dataloaders_v7h(
         image_ids_path=test_image_ids_path,
         use_float16=use_float16,
         dinov2_layer=dinov2_layer,
+        fmri_path=test_fmri_path,
+        sample_indices_path=test_sample_indices_path,
     )
     
-    # train_dataset = NeuroFluxConcatDataset([train_dataset, val_dataset])
     train_sampler = SubjectSampler(train_dataset, batch_size=batch_size, drop_last=True)
 
     train_loader = DataLoader(

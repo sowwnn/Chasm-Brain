@@ -1,0 +1,19 @@
+{
+  "tag": "whatonly_subj7",
+  "config": "rebutal/exp3/configs/exp3_whatonly_subj7.yaml",
+  "stage": 1,
+  "branch_mode": "what_only",
+  "train_subjects": [
+    7
+  ],
+  "best_epoch": 9,
+  "best_val_pearson_mean": 0.4786138520362517,
+  "best_val_mse_mean": 0.13525330903939903,
+  "best_val_per_subject": {
+    "7": {
+      "pearson": 0.4786138520362517,
+      "mse": 0.13525330903939903
+    }
+  },
+  "checkpoint": "rebutal/exp3/checkpoints/whatonly_subj7/best_stage1.pth"
+}

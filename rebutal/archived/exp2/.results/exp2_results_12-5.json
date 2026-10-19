@@ -1,0 +1,10 @@
+{
+  "experiment": "Exp2_CrossSubject",
+  "setup": "train_subj[1, 2]_test_subj05",
+  "backbone_frozen": true,
+  "subj05_test": {
+    "pearson_mean": 0.4565015042913931,
+    "pearson_std": 0.13554465721686584,
+    "mse": 0.3597260117530823
+  }
+}

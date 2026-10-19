@@ -1,0 +1,49 @@
+model:
+  name: "DirectStage2Only"
+  cls_dim: 768
+  patch_dim: 768
+  fmri_dim: 14278
+  voxels_per_cluster: 30
+  hidden_dim: 512
+  embed_dim: 384
+  latent_dim: 128
+  depth: 6
+  num_global_queries: 128
+  dropout: 0.4
+  vae_mode: "stochastic"
+
+training:
+  batch_size: 32
+  lr: 3.0e-5
+  weight_decay: 0.01
+  max_epochs: 50
+  patience: 10
+  # The direct decoder needs FP32 together with the variance-stabilized
+  # Pearson/std loss below. This keeps architecture and budget unchanged.
+  precision: "fp32"
+  amp_init_scale: 1024.0
+  grad_clip: 1.0
+  max_nonfinite_steps_per_epoch: 5
+  save_dir: "checkpoints/wacv_round2/direct_stage2_only/subj7_seed42_fp32_lr3e5_final_metric"
+
+loss:
+  pearson_weight: 0.3
+  std_weight: 0.2
+  kl_weight: 0.001
+  stability_eps: 1.0e-6
+
+experiment:
+  seed: 42
+
+data:
+  subject: 7
+  huwng_base_path: "dataset/huwng"
+  train_embeddings_path: "dataset/huwng/subj07/nsd_dinov2_vitb14_multilayer_train_sub7.npy"
+  test_embeddings_path: "dataset/huwng/subj07/nsd_dinov2_vitb14_multilayer_test_sub7.npy"
+  dinov2_layer: -1
+  roi_top_k_percent: 0.7
+  average_trials_train: false
+  average_trials_val: true
+  augment_noise_train: true
+  noise_std: 0.1
+  num_workers: 8

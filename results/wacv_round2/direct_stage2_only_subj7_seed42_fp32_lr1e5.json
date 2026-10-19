@@ -1,0 +1,120 @@
+{
+  "status": "stopped_diagnostic",
+  "experiment": "direct_stage2_only",
+  "description": "DINOv2 to voxels with learned ROI tokens and absolute local prediction; no cluster values",
+  "subject": 7,
+  "seed": 42,
+  "vae_mode": "stochastic",
+  "parameters": 268732419,
+  "max_epochs": 50,
+  "patience": 10,
+  "history": [
+    {
+      "epoch": 1,
+      "train": {
+        "loss": 1.4559083628343377,
+        "mse": 1.026934425318934,
+        "std": 0.6456055022148617,
+        "pearson": 0.0004956416715909246,
+        "grad_norm": 0.14641492220784139,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": -0.009296608157455921,
+        "pearson_std": 0.27874499559402466,
+        "mse": 0.4341295659542084,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 2,
+      "train": {
+        "loss": 1.440389688328916,
+        "mse": 1.0075807797668384,
+        "std": 0.6673082195991299,
+        "pearson": 0.002182738331819344,
+        "grad_norm": 0.1777426399564545,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": -0.005095696076750755,
+        "pearson_std": 0.2921529710292816,
+        "mse": 0.43122437596321106,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 3,
+      "train": {
+        "loss": 1.437631070967388,
+        "mse": 1.004553229500532,
+        "std": 0.668497972994654,
+        "pearson": 0.0020828108813653423,
+        "grad_norm": 0.194704965587754,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": -0.004135202616453171,
+        "pearson_std": 0.29382070899009705,
+        "mse": 0.43207797408103943,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 4,
+      "train": {
+        "loss": 1.4362391355057487,
+        "mse": 1.003063321749935,
+        "std": 0.6691162244705119,
+        "pearson": 0.00217324138419042,
+        "grad_norm": 0.2035298474919612,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": -0.0041938950307667255,
+        "pearson_std": 0.2947949767112732,
+        "mse": 0.43217092752456665,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 5,
+      "train": {
+        "loss": 1.435293340598137,
+        "mse": 1.001947354945141,
+        "std": 0.6700718566192002,
+        "pearson": 0.0022494134452848,
+        "grad_norm": 0.2123411588220551,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": -0.003718833439052105,
+        "pearson_std": 0.294677197933197,
+        "mse": 0.4301653504371643,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 6,
+      "train": {
+        "loss": 1.4345001851960857,
+        "mse": 1.0010937561202586,
+        "std": 0.6704521147381792,
+        "pearson": 0.0023098733941201354,
+        "grad_norm": 0.2180152584048494,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": -0.0038505515549331903,
+        "pearson_std": 0.2945387661457062,
+        "mse": 0.42991548776626587,
+        "num_samples": 1000
+      }
+    }
+  ],
+  "latest_epoch": 6,
+  "best_epoch": 5,
+  "best_validation_pearson": -0.003718833439052105,
+  "elapsed_seconds": 453.12161898612976,
+  "stopping_reason": "Manually stopped during epoch 7 after confirming FP32 removed the former non-finite-gradient failure; LR 1e-5 showed negligible learning and was replaced by the matched LR 3e-5 run."
+}

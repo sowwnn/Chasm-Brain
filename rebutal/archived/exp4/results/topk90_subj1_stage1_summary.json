@@ -1,0 +1,19 @@
+{
+  "tag": "topk90_subj1",
+  "config": "rebutal/exp4/configs/exp4_topk90_subj1.yaml",
+  "stage": 1,
+  "branch_mode": "both",
+  "train_subjects": [
+    1
+  ],
+  "best_epoch": 33,
+  "best_val_pearson_mean": 0.5859390662804104,
+  "best_val_mse_mean": 0.08759811031632125,
+  "best_val_per_subject": {
+    "1": {
+      "pearson": 0.5859390662804104,
+      "mse": 0.08759811031632125
+    }
+  },
+  "checkpoint": "rebutal/exp4/checkpoints/topk90_subj1/best_stage1.pth"
+}

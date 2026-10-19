@@ -1,0 +1,22 @@
+[
+  {
+  "experiment": "Exp2_CrossSubject",
+  "setup": "train_subj[1, 2]_test_subj05",
+  "backbone_frozen": true,
+  "subj05_test": {
+    "pearson_mean": 0.4573593007156314,
+    "pearson_std": 0.12795487068478512,
+    "mse": 0.36323943734169006
+    }
+  },
+  {
+    "experiment": "Exp2_CrossSubject",
+    "setup": "train_subj[1]_test_subj07",
+    "backbone_frozen": true,
+    "subj05_test": {
+      "pearson_mean": 0.34100308032042215,
+      "pearson_std": 0.12552230925462754,
+      "mse": 0.37397393584251404
+    }
+  }
+]

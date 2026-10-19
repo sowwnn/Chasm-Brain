@@ -1,0 +1,22 @@
+{
+  "subj01": {
+    "alpha": 10000,
+    "train_pearson": 0.4318767786026001,
+    "test_pearson": 0.3744630217552185
+  },
+  "subj02": {
+    "alpha": 10000,
+    "train_pearson": 0.39671146869659424,
+    "test_pearson": 0.33470454812049866
+  },
+  "subj05": {
+    "alpha": 10000,
+    "train_pearson": 0.4939332604408264,
+    "test_pearson": 0.45752769708633423
+  },
+  "subj07": {
+    "alpha": 10000,
+    "train_pearson": 0.43836677074432373,
+    "test_pearson": 0.3877009451389313
+  }
+}

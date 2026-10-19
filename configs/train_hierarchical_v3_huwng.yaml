@@ -5,7 +5,8 @@ model:
   cls_dim: 768
   patch_dim: 768
   num_patches: 256
-  fmri_dim: 15724
+  fmri_dim: 14278
+  # [15724; 12682, ... ; 14278]
   voxels_per_cluster: 30
   hidden_dim_1: 512
   depth_what: 2
@@ -22,7 +23,7 @@ training:
   weight_decay: 0.01
   max_epochs: 450
   precision: "fp16"
-  save_dir: "checkpoints/hierarchical_v3_huwng_subj01"
+  save_dir: "checkpoints/chasm_rerun_s7"
   stage: 1
   stage_1_epochs: 150
   viz_interval: 5
@@ -41,21 +42,22 @@ loss:
   std_weight: 0.2
   peak_alpha: 0.5
   peak_tau: 0.3
+  kl_weight: 0.001
+
+experiment:
+  guidance_mode: "predicted"
+  vae_mode: "stochastic"
+  seed: 42
 
 data:
-  subject: 1
+  subject: 7
   
   # === HUWNG Dataset Configuration ===
   # Thay thế datalist_path và fmri_path bằng huwng_base_path
   huwng_base_path: "dataset/huwng"
   
-  # Embeddings paths (giữ nguyên như cũ)
-  train_embeddings_path: "dataset/nsd/embeddings_patches/dinov2_patches_train_sub01.npy"
-  test_embeddings_path: "dataset/nsd/embeddings_patches/dinov2_patches_test_sub01.npy"
-  
-  # Image IDs cho embedding order (optional)
-  train_image_ids_path: "dataset/nsd/embeddings_patches/image_ids_train_sub01.npy"
-  test_image_ids_path: "dataset/nsd/embeddings_patches/image_ids_test_sub01.npy"
+  train_embeddings_path: "dataset/huwng/subj07/nsd_dinov2_vitb14_multilayer_train_sub7.npy"
+  test_embeddings_path: "dataset/huwng/subj07/nsd_dinov2_vitb14_multilayer_test_sub7.npy"
   
   # ROI và data augmentation
   roi_top_k_percent: 0.7

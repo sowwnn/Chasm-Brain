@@ -1,0 +1,80 @@
+{
+  "dataset": "BOLD5000",
+  "subject": "CSI1",
+  "model_output_shape": [
+    "B",
+    13197
+  ],
+  "evaluation": "functional ROI intersection with the trained 13,197-voxel anatomical visual mask",
+  "checkpoint": "checkpoints/wacv_round2/bold5000_csi1/seed_42/best_model.pth",
+  "num_unique_test_images": 113,
+  "num_test_presentations": 451,
+  "mapped_entries": 1162,
+  "mapped_unique_wholemask_voxels": 1159,
+  "public_roi_entries": 1685,
+  "mapping_max_absolute_error": 1.430511474609375e-06,
+  "regions": {
+    "PPA": {
+      "pearson_mean": 0.1364527940750122,
+      "pearson_sd": 0.14161352813243866,
+      "pearson_95_ci": [
+        0.1234117466956377,
+        0.14953380562365054
+      ],
+      "mapped_voxels": 271,
+      "public_roi_voxels": 331,
+      "coverage": 0.8187311178247734
+    },
+    "LOC": {
+      "pearson_mean": 0.1823601871728897,
+      "pearson_sd": 0.1495416760444641,
+      "pearson_95_ci": [
+        0.16854260675609112,
+        0.19621628187596798
+      ],
+      "mapped_voxels": 239,
+      "public_roi_voxels": 342,
+      "coverage": 0.6988304093567251
+    },
+    "EarlyVis": {
+      "pearson_mean": 0.09210113435983658,
+      "pearson_sd": 0.16135264933109283,
+      "pearson_95_ci": [
+        0.07697472311556339,
+        0.10731993149966002
+      ],
+      "mapped_voxels": 330,
+      "public_roi_voxels": 495,
+      "coverage": 0.6666666666666666
+    },
+    "OPA": {
+      "pearson_mean": 0.19292451441287994,
+      "pearson_sd": 0.1676434874534607,
+      "pearson_95_ci": [
+        0.17744474969804286,
+        0.2085839819163084
+      ],
+      "mapped_voxels": 155,
+      "public_roi_voxels": 288,
+      "coverage": 0.5381944444444444
+    },
+    "RSC": {
+      "pearson_mean": 0.09588504582643509,
+      "pearson_sd": 0.1666547656059265,
+      "pearson_95_ci": [
+        0.08058222699910403,
+        0.11157635953277349
+      ],
+      "mapped_voxels": 167,
+      "public_roi_voxels": 229,
+      "coverage": 0.7292576419213974
+    }
+  },
+  "macro_mean_over_five_rois": 0.13994474709033966,
+  "macro_pearson_95_ci": [
+    0.13049239218235015,
+    0.14914557412266732
+  ],
+  "concatenated_mapped_entries_pearson": 0.2014855444431305,
+  "comparability_note": "This preserves CHASMBrain's full 13,197-voxel two-stage output. ROI scores use only functional-ROI voxels present in that fixed anatomical mask, so voxel counts differ from published full-ROI arrays."
+}

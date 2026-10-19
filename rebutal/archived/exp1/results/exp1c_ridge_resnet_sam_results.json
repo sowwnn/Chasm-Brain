@@ -1,0 +1,37 @@
+{
+  "DINOv2 ViT-B/14 (ref)": {
+    "pearson": 0.3744630217552185,
+    "mse": 0.3629061148017645,
+    "train_pearson": 0.4318767786026001
+  },
+  "ResNet-50 pool": {
+    "pearson": 0.3501441478729248,
+    "mse": 0.37234353563189504,
+    "train_pearson": 0.5103615522384644
+  },
+  "ResNet-50 multi (last layer)": {
+    "pearson": 0.3501441478729248,
+    "mse": 0.37234353563189504,
+    "train_pearson": 0.5103615522384644
+  },
+  "ResNet-101 pool": {
+    "pearson": 0.34264612197875977,
+    "mse": 0.3840805440545082,
+    "train_pearson": 0.40141522884368896
+  },
+  "ResNet-101 multi (last layer)": {
+    "pearson": 0.34264612197875977,
+    "mse": 0.3840805440545082,
+    "train_pearson": 0.40141522884368896
+  },
+  "SAM ViT-B pool": {
+    "pearson": 0.35502952337265015,
+    "mse": 0.36896913409233095,
+    "train_pearson": 0.3821905255317688
+  },
+  "SAM ViT-B multi (last layer)": {
+    "pearson": 0.3649701476097107,
+    "mse": 0.3663131108433008,
+    "train_pearson": 0.3900601863861084
+  }
+}

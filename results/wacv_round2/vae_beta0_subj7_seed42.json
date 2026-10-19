@@ -1,0 +1,14 @@
+{
+  "status": "complete",
+  "subject": 7,
+  "seed": 42,
+  "vae_mode": "stochastic",
+  "kl_weight": 0.0,
+  "latest_completed_epoch": 56,
+  "best_epoch": 32,
+  "best_validation_pearson": 0.433,
+  "best_epoch_validation_mse": 0.379,
+  "stopping_reason": "early stopping after 20 epochs without improvement",
+  "checkpoint": "checkpoints/wacv_round2/vae_beta0/seed_42/best_model.pth",
+  "raw_log": "results/wacv_round2/training/vae_beta0_subj7_seed42.log"
+}

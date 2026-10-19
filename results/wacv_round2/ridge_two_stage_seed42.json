@@ -1,0 +1,215 @@
+{
+  "seed": 42,
+  "features": "DINOv2 ViT-B/14 layer -1, GAP over 257 tokens (768-d)",
+  "clustering": "30 voxels/cluster, top-70% aggregation",
+  "protocol": "9000 train images split into fit/val; alpha selected on val; 1000 held-out test images",
+  "stage2_guidance": "5-fold out-of-fold Stage-1 predictions at fit time",
+  "alphas": [
+    1.0,
+    100.0,
+    1000.0,
+    10000.0,
+    100000.0,
+    1000000.0
+  ],
+  "per_subject": {
+    "subj01": {
+      "subject": 1,
+      "num_voxels": 15724,
+      "num_clusters": 524,
+      "n_fit": 8000,
+      "n_val": 1000,
+      "n_test": 1000,
+      "one_stage": {
+        "alpha": 10000.0,
+        "val_pearson": 0.3661591410636902,
+        "test_pearson": 0.3722922205924988,
+        "test_mse": 0.36376190185546875
+      },
+      "stage1": {
+        "alpha": 1000.0,
+        "val_pearson": 0.5085557699203491,
+        "test_pearson": 0.5215097665786743,
+        "test_mse": 0.07918161153793335
+      },
+      "stage1_only_predicted": {
+        "test_pearson": 0.2210577428340912,
+        "test_mse": 0.4784725606441498
+      },
+      "stage1_only_oracle": {
+        "test_pearson": 0.4052923619747162,
+        "test_mse": 0.4060467779636383
+      },
+      "two_stage_predicted": {
+        "alpha": 10000.0,
+        "val_pearson": 0.3768731355667114,
+        "test_pearson": 0.3814350366592407,
+        "test_mse": 0.36047831177711487
+      },
+      "two_stage_oracle": {
+        "alpha": 1000.0,
+        "val_pearson": 0.6600680947303772,
+        "test_pearson": 0.6566137671470642,
+        "test_mse": 0.2201148420572281
+      }
+    },
+    "subj02": {
+      "subject": 2,
+      "num_voxels": 12682,
+      "num_clusters": 422,
+      "n_fit": 8000,
+      "n_val": 1000,
+      "n_test": 1000,
+      "one_stage": {
+        "alpha": 10000.0,
+        "val_pearson": 0.32190239429473877,
+        "test_pearson": 0.3320416212081909,
+        "test_mse": 0.35061320662498474
+      },
+      "stage1": {
+        "alpha": 10000.0,
+        "val_pearson": 0.4592970609664917,
+        "test_pearson": 0.471367746591568,
+        "test_mse": 0.0803421214222908
+      },
+      "stage1_only_predicted": {
+        "test_pearson": 0.19293218851089478,
+        "test_mse": 0.45453208684921265
+      },
+      "stage1_only_oracle": {
+        "test_pearson": 0.3896101117134094,
+        "test_mse": 0.3776791989803314
+      },
+      "two_stage_predicted": {
+        "alpha": 10000.0,
+        "val_pearson": 0.32735395431518555,
+        "test_pearson": 0.33776238560676575,
+        "test_mse": 0.34895721077919006
+      },
+      "two_stage_oracle": {
+        "alpha": 1000.0,
+        "val_pearson": 0.6419793963432312,
+        "test_pearson": 0.643907904624939,
+        "test_mse": 0.20793567597866058
+      }
+    },
+    "subj05": {
+      "subject": 5,
+      "num_voxels": 13039,
+      "num_clusters": 434,
+      "n_fit": 8000,
+      "n_val": 1000,
+      "n_test": 1000,
+      "one_stage": {
+        "alpha": 10000.0,
+        "val_pearson": 0.4452219009399414,
+        "test_pearson": 0.45517709851264954,
+        "test_mse": 0.3450140357017517
+      },
+      "stage1": {
+        "alpha": 1000.0,
+        "val_pearson": 0.6141383051872253,
+        "test_pearson": 0.6279245615005493,
+        "test_mse": 0.07774008810520172
+      },
+      "stage1_only_predicted": {
+        "test_pearson": 0.28237029910087585,
+        "test_mse": 0.4769229292869568
+      },
+      "stage1_only_oracle": {
+        "test_pearson": 0.42936187982559204,
+        "test_mse": 0.40690088272094727
+      },
+      "two_stage_predicted": {
+        "alpha": 10000.0,
+        "val_pearson": 0.45473939180374146,
+        "test_pearson": 0.4636569321155548,
+        "test_mse": 0.34061479568481445
+      },
+      "two_stage_oracle": {
+        "alpha": 1000.0,
+        "val_pearson": 0.693202793598175,
+        "test_pearson": 0.6929620504379272,
+        "test_mse": 0.20676016807556152
+      }
+    },
+    "subj07": {
+      "subject": 7,
+      "num_voxels": 14278,
+      "num_clusters": 475,
+      "n_fit": 8000,
+      "n_val": 1000,
+      "n_test": 1000,
+      "one_stage": {
+        "alpha": 10000.0,
+        "val_pearson": 0.36807334423065186,
+        "test_pearson": 0.3858678638935089,
+        "test_mse": 0.36215025186538696
+      },
+      "stage1": {
+        "alpha": 1000.0,
+        "val_pearson": 0.5156446695327759,
+        "test_pearson": 0.5419997572898865,
+        "test_mse": 0.0719682052731514
+      },
+      "stage1_only_predicted": {
+        "test_pearson": 0.22954852879047394,
+        "test_mse": 0.4841502010822296
+      },
+      "stage1_only_oracle": {
+        "test_pearson": 0.40573224425315857,
+        "test_mse": 0.4176088869571686
+      },
+      "two_stage_predicted": {
+        "alpha": 10000.0,
+        "val_pearson": 0.37782642245292664,
+        "test_pearson": 0.39378923177719116,
+        "test_mse": 0.3590555191040039
+      },
+      "two_stage_oracle": {
+        "alpha": 1000.0,
+        "val_pearson": 0.6566427946090698,
+        "test_pearson": 0.6603643894195557,
+        "test_mse": 0.2249414175748825
+      }
+    }
+  },
+  "aggregate": {
+    "one_stage": {
+      "pearson_mean": 0.38634470105171204,
+      "pearson_std": 0.051265397691634455,
+      "mse_mean": 0.35538484901189804,
+      "mse_std": 0.00906031695355205
+    },
+    "stage1": {
+      "pearson_mean": 0.5407004579901695,
+      "pearson_std": 0.06528154389154896,
+      "mse_mean": 0.07730800658464432,
+      "mse_std": 0.0037155717754536986
+    },
+    "stage1_only_predicted": {
+      "pearson_mean": 0.23147718980908394,
+      "pearson_std": 0.03736357543139696,
+      "mse_mean": 0.4735194444656372,
+      "mse_std": 0.013033927577697814
+    },
+    "stage1_only_oracle": {
+      "pearson_mean": 0.40749914944171906,
+      "pearson_std": 0.016390937694883836,
+      "mse_mean": 0.4020589366555214,
+      "mse_std": 0.017083324066605534
+    },
+    "two_stage_predicted": {
+      "pearson_mean": 0.3941608965396881,
+      "pearson_std": 0.05219379477998496,
+      "mse_mean": 0.3522764593362808,
+      "mse_std": 0.009313750495893301
+    },
+    "two_stage_oracle": {
+      "pearson_mean": 0.6634620279073715,
+      "pearson_std": 0.020889463901611817,
+      "mse_mean": 0.21493802592158318,
+      "mse_std": 0.008995879307484033
+    }
+  }
+}

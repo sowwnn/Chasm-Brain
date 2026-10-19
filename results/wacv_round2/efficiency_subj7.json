@@ -1,0 +1,23 @@
+{
+  "config": "configs/train_hierarchical_v3_huwng.yaml",
+  "checkpoint": "checkpoints/chasm_rerun_s7/best_model.pth",
+  "device": "NVIDIA GeForce RTX 4090",
+  "batch_size": 1,
+  "parameters": {
+    "stage1": 13250284,
+    "stage2_including_patch_pooler": 268733187,
+    "total": 281983471
+  },
+  "estimated_flops_per_image": {
+    "stage1": 3744924338.0,
+    "stage2": 8611964416.0,
+    "total": 12356888754.0,
+    "note": "Dense FLOPs plus an analytical Mamba estimate; normalization and elementwise ops are excluded."
+  },
+  "inference": {
+    "latency_ms_per_batch": 5.066188812255859,
+    "latency_ms_per_image": 5.066188812255859,
+    "throughput_images_per_second": 197.38703728942204,
+    "peak_memory_bytes": 1158302720
+  }
+}

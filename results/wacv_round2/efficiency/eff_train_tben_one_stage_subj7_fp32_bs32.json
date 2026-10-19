@@ -1,0 +1,20 @@
+{
+  "config": "configs/train_tben_one_stage_subj7.yaml",
+  "checkpoint": null,
+  "device": "NVIDIA GeForce RTX 4090",
+  "batch_size": 32,
+  "precision": "fp32",
+  "parameters": {
+    "total": 17700102
+  },
+  "estimated_flops_per_image": {
+    "total": 1497366528.0,
+    "note": "Dense Linear FLOPs only; attention matmuls, normalization and elementwise ops are excluded."
+  },
+  "inference": {
+    "latency_ms_per_batch": 6.496481323242188,
+    "latency_ms_per_image": 0.20301504135131837,
+    "throughput_images_per_second": 4925.7433998178285,
+    "peak_memory_bytes": 987553280
+  }
+}

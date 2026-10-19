@@ -1,0 +1,71 @@
+{
+  "dataset": "BOLD5000",
+  "subject": "CSI1",
+  "protocol": "Leakage-free repeated-image evaluation: develop on images shown once; predict each of 113 repeated images once and correlate against every held-out measured repetition.",
+  "metric": "Pearson across voxels per presentation, then averaged",
+  "checkpoint": "checkpoints/wacv_round2/bold5000_csi1_roi/seed_42/best_model.pth",
+  "num_repeated_unique_images": 113,
+  "num_test_presentations": 451,
+  "concatenated_roi_array": {
+    "pearson_mean": 0.20649228990077972,
+    "pearson_sd": 0.14323870837688446,
+    "pearson_95_ci": [
+      0.19351197741925716,
+      0.2199495892971754
+    ],
+    "mse_mean": 0.9678345918655396
+  },
+  "regions": {
+    "PPA": {
+      "pearson_mean": 0.12870799005031586,
+      "pearson_sd": 0.1342868208885193,
+      "pearson_95_ci": [
+        0.11628142278641462,
+        0.1412004504352808
+      ],
+      "num_voxels": 331
+    },
+    "LOC": {
+      "pearson_mean": 0.17909911274909973,
+      "pearson_sd": 0.14675426483154297,
+      "pearson_95_ci": [
+        0.16519093438982962,
+        0.19289933666586875
+      ],
+      "num_voxels": 342
+    },
+    "EarlyVis": {
+      "pearson_mean": 0.10548024624586105,
+      "pearson_sd": 0.15749411284923553,
+      "pearson_95_ci": [
+        0.09111229944974183,
+        0.11985946260392664
+      ],
+      "num_voxels": 495
+    },
+    "OPA": {
+      "pearson_mean": 0.19363448023796082,
+      "pearson_sd": 0.1655958741903305,
+      "pearson_95_ci": [
+        0.17855063565075396,
+        0.20913973748683928
+      ],
+      "num_voxels": 288
+    },
+    "RSC": {
+      "pearson_mean": 0.09700790047645569,
+      "pearson_sd": 0.16348253190517426,
+      "pearson_95_ci": [
+        0.0818789692595601,
+        0.11238940209150314
+      ],
+      "num_voxels": 229
+    }
+  },
+  "macro_mean_over_five_rois": 0.14078593254089355,
+  "macro_pearson_95_ci": [
+    0.1318716537207365,
+    0.150086135789752
+  ],
+  "comparability_note": "ROI-wise values match the Delavari et al. metric and repeated-image split. The macro average is not their deduplicated all-ROI union because public ROI arrays can overlap."
+}

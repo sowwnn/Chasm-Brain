@@ -1,0 +1,221 @@
+{
+  "status": "running",
+  "experiment": "TBEnOneStage",
+  "description": "TBEn decoder (authors' code, vendored in third_party/transformer_brain_encoder) reading out our voxel clusters in a single stage; not a reproduction of the published numbers",
+  "subject": 5,
+  "seed": 42,
+  "vae_mode": "stochastic",
+  "parameters": 16715823,
+  "max_epochs": 450,
+  "patience": 10,
+  "history": [
+    {
+      "epoch": 1,
+      "train": {
+        "loss": 1.3321491414824698,
+        "mse": 1.0130615639516891,
+        "std": 0.3503727182516141,
+        "pearson": 0.1699572485703964,
+        "grad_norm": 0.18107292395469557,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.3914009630680084,
+        "pearson_std": 0.14973679184913635,
+        "mse": 0.38434553146362305,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 2,
+      "train": {
+        "loss": 1.241544546181621,
+        "mse": 0.9555142687308831,
+        "std": 0.31311762124335357,
+        "pearson": 0.25531176077301393,
+        "grad_norm": 0.194782885456566,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.42495912313461304,
+        "pearson_std": 0.14083519577980042,
+        "mse": 0.37209367752075195,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 3,
+      "train": {
+        "loss": 1.2197625786949873,
+        "mse": 0.9420545020561626,
+        "std": 0.301788222941781,
+        "pearson": 0.27549953433471785,
+        "grad_norm": 0.20833506144379949,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.44316810369491577,
+        "pearson_std": 0.134771928191185,
+        "mse": 0.3642946183681488,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 4,
+      "train": {
+        "loss": 1.2061081888554077,
+        "mse": 0.9334462944016055,
+        "std": 0.295257784664843,
+        "pearson": 0.2879665411946895,
+        "grad_norm": 0.216739437493141,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4553152322769165,
+        "pearson_std": 0.1310836523771286,
+        "mse": 0.36117568612098694,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 5,
+      "train": {
+        "loss": 1.1957984902539145,
+        "mse": 0.9268970601923525,
+        "std": 0.29011034751631326,
+        "pearson": 0.2970698131325689,
+        "grad_norm": 0.2264271012086461,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.46448126435279846,
+        "pearson_std": 0.12867310643196106,
+        "mse": 0.3588271737098694,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 6,
+      "train": {
+        "loss": 1.1874673237862818,
+        "mse": 0.9215670853040113,
+        "std": 0.28624382222674494,
+        "pearson": 0.3044961132153356,
+        "grad_norm": 0.23600135289335872,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.47144004702568054,
+        "pearson_std": 0.12692001461982727,
+        "mse": 0.3531898856163025,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 7,
+      "train": {
+        "loss": 1.1797161235221056,
+        "mse": 0.9164539971526973,
+        "std": 0.2830365959329537,
+        "pearson": 0.31115167687866896,
+        "grad_norm": 0.24716433769584692,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4756942093372345,
+        "pearson_std": 0.1255922168493271,
+        "mse": 0.35559985041618347,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 8,
+      "train": {
+        "loss": 1.1725791990403462,
+        "mse": 0.9117254195547048,
+        "std": 0.28006236004164775,
+        "pearson": 0.3171966909160252,
+        "grad_norm": 0.25962795879280864,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.48013395071029663,
+        "pearson_std": 0.1253303736448288,
+        "mse": 0.35192692279815674,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 9,
+      "train": {
+        "loss": 1.1663700506921906,
+        "mse": 0.9076019360784393,
+        "std": 0.27757160429216365,
+        "pearson": 0.32248841128881006,
+        "grad_norm": 0.2673905222264615,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.4829147160053253,
+        "pearson_std": 0.12400994449853897,
+        "mse": 0.3524928689002991,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 10,
+      "train": {
+        "loss": 1.1605715743163303,
+        "mse": 0.9036377674037168,
+        "std": 0.27543668440086844,
+        "pearson": 0.3271794918027495,
+        "grad_norm": 0.28396581169902785,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.48602649569511414,
+        "pearson_std": 0.12195006012916565,
+        "mse": 0.34905344247817993,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 11,
+      "train": {
+        "loss": 1.1553821585639374,
+        "mse": 0.8999361552801844,
+        "std": 0.27413879907640276,
+        "pearson": 0.3312736007595967,
+        "grad_norm": 0.2951058590009119,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.488332062959671,
+        "pearson_std": 0.12295779585838318,
+        "mse": 0.3535160422325134,
+        "num_samples": 1000
+      }
+    },
+    {
+      "epoch": 12,
+      "train": {
+        "loss": 1.1505127320793034,
+        "mse": 0.8965250066308081,
+        "std": 0.2725121432281191,
+        "pearson": 0.33505008752377147,
+        "grad_norm": 0.30945038500276184,
+        "skipped_nonfinite_steps": 0
+      },
+      "validation": {
+        "pearson": 0.49071574211120605,
+        "pearson_std": 0.1223001703619957,
+        "mse": 0.350105345249176,
+        "num_samples": 1000
+      }
+    }
+  ],
+  "latest_epoch": 12,
+  "best_epoch": 12,
+  "best_validation_pearson": 0.49071574211120605,
+  "elapsed_seconds": 979.4171812534332
+}

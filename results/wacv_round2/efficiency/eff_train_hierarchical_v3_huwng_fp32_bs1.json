@@ -1,0 +1,24 @@
+{
+  "config": "configs/train_hierarchical_v3_huwng.yaml",
+  "checkpoint": null,
+  "device": "NVIDIA GeForce RTX 4090",
+  "batch_size": 1,
+  "precision": "fp32",
+  "parameters": {
+    "stage1": 13250284,
+    "stage2_including_patch_pooler": 268733187,
+    "total": 281983471
+  },
+  "estimated_flops_per_image": {
+    "stage1": 3744924338.0,
+    "stage2": 8611964416.0,
+    "total": 12356888754.0,
+    "note": "Dense FLOPs plus an analytical Mamba estimate; normalization and elementwise ops are excluded."
+  },
+  "inference": {
+    "latency_ms_per_batch": 4.9967718505859375,
+    "latency_ms_per_image": 4.9967718505859375,
+    "throughput_images_per_second": 200.129209398011,
+    "peak_memory_bytes": 1158302720
+  }
+}

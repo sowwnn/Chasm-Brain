@@ -1,0 +1,67 @@
+model:
+  name: "HierarchicalARM_V31"
+  cls_dim: 768
+  patch_dim: 768
+  num_patches: 256
+  fmri_dim: 1685
+  voxels_per_cluster: 30
+  hidden_dim_1: 512
+  depth_what: 2
+  depth_where: 4
+  contrastive_dim: 256
+  embed_dim_2: 384
+  depth_2: 6
+  num_global_queries: 128
+  dropout: 0.4
+  latent_dim: 128
+
+training:
+  batch_size: 32
+  lr: 3.0e-5
+  weight_decay: 0.01
+  max_epochs: 60
+  precision: "fp16"
+  save_dir: "checkpoints/wacv_round2/bold5000_csi1_roi/seed_42"
+  stage: 1
+  stage_1_epochs: 60
+  viz_interval: 5
+  grad_clip: 0.5
+  early_stopping: true
+  patience: 8
+
+loss:
+  alpha: 2.0
+  tau: 0.2
+  pearson_weight: 0.3
+  contrastive_weight: 0.2
+  std_weight: 0.2
+  peak_alpha: 0.5
+  peak_tau: 0.3
+  kl_weight: 0.001
+
+experiment:
+  guidance_mode: "predicted"
+  vae_mode: "stochastic"
+  backbone: "mamba"
+  seed: 42
+
+data:
+  subject: 1
+  huwng_base_path: "dataset/BOLD5000/processed/CSI1"
+  train_embeddings_path: "dataset/BOLD5000/processed/CSI1/dinov2_vitb14_multilayer_train.npy"
+  test_embeddings_path: "dataset/BOLD5000/processed/CSI1/dinov2_vitb14_multilayer_train.npy"
+  train_fmri_path: "dataset/BOLD5000/processed/CSI1/roi_train_unique_zscore.npy"
+  validation_fmri_path: "dataset/BOLD5000/processed/CSI1/roi_train_unique_zscore.npy"
+  train_sample_indices_path: "dataset/BOLD5000/processed/CSI1/fit_indices_seed42.npy"
+  validation_sample_indices_path: "dataset/BOLD5000/processed/CSI1/validation_indices_seed42.npy"
+  evaluation_embeddings_path: "dataset/BOLD5000/processed/CSI1/dinov2_vitb14_multilayer_test.npy"
+  evaluation_fmri_path: "dataset/BOLD5000/processed/CSI1/roi_test_repetitions_zscore.npy"
+  evaluation_embedding_indices_path: "dataset/BOLD5000/processed/CSI1/roi_test_repetition_embedding_indices.npy"
+  roi_metadata_path: "dataset/BOLD5000/processed/CSI1/roi_protocol_metadata.json"
+  dinov2_layer: -1
+  roi_top_k_percent: 0.7
+  average_trials_train: true
+  average_trials_val: true
+  augment_noise_train: true
+  noise_std: 0.1
+  num_workers: 8

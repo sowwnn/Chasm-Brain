@@ -1,0 +1,71 @@
+{
+  "status": "complete",
+  "dataset": "BOLD5000",
+  "subject": "CSI1",
+  "baseline": "DINOv2 ViT-B/14 layer 12 patch GAP -> Ridge",
+  "split": {
+    "fit": 4323,
+    "validation": 480,
+    "test_repeated": 113,
+    "test_used_for_model_selection": false
+  },
+  "num_features": 768,
+  "num_voxels": 13197,
+  "effective_parameters": 10148493,
+  "validation_history": [
+    {
+      "alpha": 100.0,
+      "pearson": 0.04923924803733826,
+      "mse": 1.1415261030197144
+    },
+    {
+      "alpha": 300.0,
+      "pearson": 0.05387764424085617,
+      "mse": 1.0998700857162476
+    },
+    {
+      "alpha": 1000.0,
+      "pearson": 0.06327378749847412,
+      "mse": 1.0466796159744263
+    },
+    {
+      "alpha": 3000.0,
+      "pearson": 0.07594507932662964,
+      "mse": 1.008194923400879
+    },
+    {
+      "alpha": 10000.0,
+      "pearson": 0.09172312915325165,
+      "mse": 0.9849477410316467
+    },
+    {
+      "alpha": 30000.0,
+      "pearson": 0.10219752788543701,
+      "mse": 0.9783111810684204
+    },
+    {
+      "alpha": 100000.0,
+      "pearson": 0.10452552139759064,
+      "mse": 0.980320155620575
+    },
+    {
+      "alpha": 300000.0,
+      "pearson": 0.09649506211280823,
+      "mse": 0.9848148822784424
+    },
+    {
+      "alpha": 1000000.0,
+      "pearson": 0.06458394974470139,
+      "mse": 0.9882197380065918
+    }
+  ],
+  "best_alpha": 100000.0,
+  "test": {
+    "pearson_mean": 0.17666210234165192,
+    "pearson_95_ci": [
+      0.15984592847526075,
+      0.19334353879094124
+    ],
+    "mse_mean": 0.2613668441772461
+  }
+}
