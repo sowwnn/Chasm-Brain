@@ -3,6 +3,11 @@
 
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
+# MY KEY RULES
+
+Luôn trả lời ngắn gọn xúc tích, đúng trọng tâm câu hỏi, nếu confuse câu hỏi thì hỏi lại tôi trước khi trả lời (Tôi hơi ADHD)
+Luôn trả lời tôi bằng tiếng việt, nhưng comment, documents, hàm, tên biến, tên files, ... cần được viết bằng Tiếng Anh
+
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
 ## 1. Think Before Coding
