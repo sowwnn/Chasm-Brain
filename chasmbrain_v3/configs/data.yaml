@@ -1,6 +1,11 @@
-# NSD paths, subjects, split (spec §3)
-nsd_root: dataset/
+# NSD data source (spec §3). Uses the pre-extracted dataset/huwng/ files, not raw NSD HDF5
+# (reading 40 raw sessions per subject from the HDD archive takes ~20 min/subject; huwng/ already
+# has masked, z-scored betas with 3 repeats and matching DINOv2 features).
+huwng_root: dataset/huwng
+splits_dir: chasmbrain_v3_artifacts/splits
+# huwng/subj02 and huwng/subj07 are mislabeled (verified 2026-10-20: voxel counts are swapped
+# relative to each subject's true nsdgeneral mask on /mnt/HDD/dataset/NSD_raw). This maps the
+# nominal subject id to the actual huwng directory holding that subject's data.
+huwng_dir_for_subject: {1: "subj01", 2: "subj07", 5: "subj05", 7: "subj02"}
 subjects: [1, 2, 5, 7]
-mask: nsdgeneral
-split_seed: 0
 n_val: 1000

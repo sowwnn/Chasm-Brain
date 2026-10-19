@@ -29,3 +29,6 @@ tensorboard/
 dataset/
 dataset*/
 
+
+# chasmbrain_v3 generated artifacts (splits, caches, run outputs)
+chasmbrain_v3_artifacts/
